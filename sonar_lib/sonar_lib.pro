@@ -24,3 +24,5 @@ INCLUDEPATH += $$PWD
 windows  {
     QMAKE_CXXFLAGS += /bigobj
 }
+
+include (external_libs.pri)
