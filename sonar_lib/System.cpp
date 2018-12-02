@@ -2,6 +2,7 @@
 #include "SourceFrame.h"
 #include "AbstractInitTracker.h"
 #include "CPU_InitTracker.h"
+#include "Initializator.h"
 
 #include <exception>
 
@@ -13,6 +14,7 @@ System::System():
     m_trackingState(TrackingState::NotStarted),
     m_trackingQuality(TrackingQuality::Ugly)
 {
+    m_initializator = make_shared<Initializator>();
     setProcessingMode(ProcessingMode::CPU);
 }
 
@@ -70,11 +72,12 @@ void System::process(const SourceFrame & sourceFrame)
         m_initTracker->process(sourceFrame);
         if (m_initTracker->isFinished())
         {
-
+            
         }
     } break;
     case TrackingState::Tracking: {
         m_trackingState = TrackingState::Lost;
+        m_trackingQuality = TrackingQuality::Ugly;
     } break;
     default:
         break;

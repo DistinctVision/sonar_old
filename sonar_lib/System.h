@@ -27,8 +27,10 @@ enum class ProcessingMode: int
     CPU_OPENCV
 };
 
+// forward declaration
 class SourceFrame;
 class AbstractInitTracker;
+class Initializator;
 
 class System
 {
@@ -53,6 +55,7 @@ private:
     ProcessingMode m_processingMode;
 
     std::shared_ptr<AbstractInitTracker> m_initTracker;
+    std::shared_ptr<Initializator> m_initializator;
 };
 
 } // namespace sonar

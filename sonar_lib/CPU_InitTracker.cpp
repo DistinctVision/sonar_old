@@ -40,6 +40,8 @@ void CPU_InitTracker::reset()
 
 bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
 {
+    ///TODO make lk filter
+
     assert(sourceFrame.type() == SourceFrame::Type::Image);
     ConstImage<uchar> image = sourceFrame.image();
     switch (m_indexStep) {
