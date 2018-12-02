@@ -30,15 +30,18 @@ include (external/external_libs.pri)
 include (General/General.pri)
 include (DebugTools/DebugTools.pri)
 include (ImageTools/ImageTools.pri)
+include (CameraTools/CameraTools.pri)
 
 HEADERS += \
     System.h \
     SourceFrame.h \
     AbstractInitTracker.h \
-    CPU_InitTracker.h
+    CPU_InitTracker.h \
+    Initializator.h
 
 SOURCES += \
     System.cpp \
     SourceFrame.cpp \
     AbstractInitTracker.cpp \
-    CPU_InitTracker.cpp
+    CPU_InitTracker.cpp \
+    Initializator.cpp

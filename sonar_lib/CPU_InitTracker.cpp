@@ -42,8 +42,7 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
 {
     assert(sourceFrame.type() == SourceFrame::Type::Image);
     ConstImage<uchar> image = sourceFrame.image();
-    switch (m_indexStep)
-    {
+    switch (m_indexStep) {
     case 0: {
         ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
         vector<FeatureDetector::FeatureCorner> corners = m_featureDetector.detectCorners(imagePyramid);

@@ -1,4 +1,4 @@
-DEFINES += EIGEN_LIB
+DEFINES += EIGEN3_LIB
 
 linux {
     INCLUDEPATH += /usr/local/include/eigen3

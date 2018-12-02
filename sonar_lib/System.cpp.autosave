@@ -70,7 +70,7 @@ void System::process(const SourceFrame & sourceFrame)
         m_initTracker->process(sourceFrame);
         if (m_initTracker->isFinished())
         {
-
+            
         }
     } break;
     case TrackingState::Tracking: {

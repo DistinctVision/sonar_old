@@ -1,1 +1,2 @@
-include (eigen.pri)
+include (eigen3.pri)
+include (opengv.pri)
