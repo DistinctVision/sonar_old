@@ -25,4 +25,15 @@ windows  {
     QMAKE_CXXFLAGS += /bigobj
 }
 
-include (external_libs.pri)
+include (external/external_libs.pri)
+
+include (General/General.pri)
+include (DebugTools/DebugTools.pri)
+
+HEADERS += \
+    System.h \
+    SourceFrame.h
+
+SOURCES += \
+    System.cpp \
+    SourceFrame.cpp
