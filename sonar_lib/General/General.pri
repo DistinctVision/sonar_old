@@ -1,5 +1,6 @@
 HEADERS += \
     $$PWD/Image.h \
+    $$PWD/ImagePyramid.h \
     $$PWD/Point2.h \
     $$PWD/ImageUtils.h \
     $$PWD/WLS.h \

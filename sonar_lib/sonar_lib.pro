@@ -29,11 +29,16 @@ include (external/external_libs.pri)
 
 include (General/General.pri)
 include (DebugTools/DebugTools.pri)
+include (ImageTools/ImageTools.pri)
 
 HEADERS += \
     System.h \
-    SourceFrame.h
+    SourceFrame.h \
+    AbstractInitTracker.h \
+    CPU_InitTracker.h
 
 SOURCES += \
     System.cpp \
-    SourceFrame.cpp
+    SourceFrame.cpp \
+    AbstractInitTracker.cpp \
+    CPU_InitTracker.cpp
