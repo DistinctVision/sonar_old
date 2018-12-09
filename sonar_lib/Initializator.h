@@ -43,13 +43,21 @@ private:
     float m_maxPixelError;
     int m_numberRansacIterations;
 
-
     std::tuple<Eigen::Matrix3d, Eigen::Vector3d,
                Eigen::Matrix3d, Eigen::Vector3d,
                std::vector<int>, opengv::points_t>
     _compute(const opengv::bearingVectors_t & firstDirs,
              const opengv::bearingVectors_t & secondDirs,
              const opengv::bearingVectors_t & thirdDirs) const;
+
+    opengv::transformations_t _convert(const opengv::essentials_t & essentials) const;
+
+    void _filterResult(opengv::transformations_t & secondTransformations,
+                       opengv::transformations_t & thirdTransformations,
+                       const std::vector<int> & samples,
+                       const opengv::bearingVectors_t & firstDirs,
+                       const opengv::bearingVectors_t & secondDirs,
+                       const opengv::bearingVectors_t & thirdDirs) const;
 };
 
 } // namespace sonar
