@@ -2,7 +2,7 @@
 
 namespace sonar {
 
-SourceFrame::SourceFrame(const ImageRef<uchar> &image):
+SourceFrame::SourceFrame(const ImageRef<uchar> & image):
     m_type(Type::Image),
     m_image(image)
 {

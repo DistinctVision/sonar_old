@@ -27,6 +27,7 @@ Initializator::Initializator():
     m_maxPixelError(2.0f),
     m_numberRansacIterations(300)
 {
+    m_planeFinder = make_shared<PlaneFinder>();
 }
 
 shared_ptr<const AbstractCamera> Initializator::camera() const
@@ -69,6 +70,16 @@ void Initializator::setNumberRansacIterations(int numberRansacIterations)
     m_numberRansacIterations = numberRansacIterations;
 }
 
+shared_ptr<const PlaneFinder> Initializator::planeFinder() const
+{
+    return m_planeFinder;
+}
+
+shared_ptr<PlaneFinder> Initializator::planeFinder()
+{
+    return m_planeFinder;
+}
+
 bool Initializator::compute(const vector<Point2d> & firstFrame,
                             const vector<Point2d> & secondFrame,
                             const vector<Point2d> & thirdFrame)
@@ -100,6 +111,10 @@ bool Initializator::compute(const vector<Point2d> & firstFrame,
         thirdRotation, thirdPosition,
         inliers, points) = _compute(firstDirs, secondDirs, thirdDirs);
 
+    Plane plane = m_planeFinder->find(points);
+
+    transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdPosition);
+
     return (cast<int>(inliers.size()) >= m_minNumberPoints);
 }
 
@@ -110,17 +125,13 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 {
     ///TODO use parallel calculating
 
-    pair<relative_pose::CentralRelativeAdapter, relative_pose::CentralRelativeAdapter> adapters(
-                relative_pose::CentralRelativeAdapter(firstDirs, secondDirs),
-                relative_pose::CentralRelativeAdapter(firstDirs, thirdDirs));
-
     const double threshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
                                              cast<double>(max(m_camera->imageSize().x,
                                                               m_camera->imageSize().y)))));
 
     size_t numberPoints = firstDirs.size();
 
-    vector<int> shuffled_indices(cast<size_t>(numberPoints));
+    vector<int> shuffled_indices(numberPoints);
     for (size_t i = 0; i < numberPoints; ++i)
         shuffled_indices[i] = cast<int>(i);
     random_shuffle(shuffled_indices.begin(), shuffled_indices.end());
@@ -146,16 +157,18 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     transformation_t best_secondTransformation;
     transformation_t best_thirdTransformation;
 
+    relative_pose::CentralRelativeAdapter adapter(firstDirs, thirdDirs);
+
     for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
     {
-        for (size_t i = 0; i < samples.size(); ++i)
+        for (size_t i = 0; i < 5; ++i)
         {
             swap(shuffled_indices[i],
                  shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
             samples[i] = shuffled_indices[i];
         }
 
-        essentials = relative_pose::fivept_nister(adapters.first, samples);
+        essentials = relative_pose::fivept_nister(adapter, samples);
         transformations_t thirdTransforms = _convert(essentials);
 
         transformations_t secondTransforms;

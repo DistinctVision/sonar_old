@@ -11,10 +11,11 @@ class SourceFrame
 public:
     enum class Type
     {
-        Image
+        Image,
+        Texture
     };
 
-    SourceFrame(const ImageRef<uchar> &image);
+    SourceFrame(const ImageRef<uchar> & image);
 
     Type type() const;
 

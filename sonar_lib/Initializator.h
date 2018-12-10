@@ -11,6 +11,8 @@
 
 #include "General/Point2.h"
 
+#include "PlaneFinder.h"
+
 namespace sonar {
 
 // forward declaration
@@ -19,6 +21,8 @@ class AbstractCamera;
 class Initializator
 {
 public:
+    using Plane = PlaneFinder::Plane;
+
     Initializator();
 
     std::shared_ptr<const AbstractCamera> camera() const;
@@ -33,6 +37,9 @@ public:
     int numberRansacIterations() const;
     void setNumberRansacIterations(int numberRansacIterations);
 
+    std::shared_ptr<const PlaneFinder> planeFinder() const;
+    std::shared_ptr<PlaneFinder> planeFinder();
+
     bool compute(const std::vector<Point2d> & firstFrame,
                  const std::vector<Point2d> & secondFrame,
                  const std::vector<Point2d> & thirdFrame);
@@ -42,6 +49,8 @@ private:
     int m_minNumberPoints;
     float m_maxPixelError;
     int m_numberRansacIterations;
+
+    std::shared_ptr<PlaneFinder> m_planeFinder;
 
     std::tuple<Eigen::Matrix3d, Eigen::Vector3d,
                Eigen::Matrix3d, Eigen::Vector3d,

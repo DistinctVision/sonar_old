@@ -37,11 +37,13 @@ HEADERS += \
     SourceFrame.h \
     AbstractInitTracker.h \
     CPU_InitTracker.h \
-    Initializator.h
+    Initializator.h \
+    PlaneFinder.h
 
 SOURCES += \
     System.cpp \
     SourceFrame.cpp \
     AbstractInitTracker.cpp \
     CPU_InitTracker.cpp \
-    Initializator.cpp
+    Initializator.cpp \
+    PlaneFinder.cpp
