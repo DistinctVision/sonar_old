@@ -38,7 +38,8 @@ HEADERS += \
     AbstractInitTracker.h \
     CPU_InitTracker.h \
     Initializator.h \
-    PlaneFinder.h
+    PlaneFinder.h \
+    MapFrame.h
 
 SOURCES += \
     System.cpp \
@@ -46,4 +47,5 @@ SOURCES += \
     AbstractInitTracker.cpp \
     CPU_InitTracker.cpp \
     Initializator.cpp \
-    PlaneFinder.cpp
+    PlaneFinder.cpp \
+    MapFrame.cpp

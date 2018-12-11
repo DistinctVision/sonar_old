@@ -15,6 +15,8 @@
 #include "General/cast.h"
 #include "CameraTools/AbstractCamera.h"
 
+#include "PlaneFinder.h"
+
 using namespace std;
 using namespace std::chrono;
 using namespace opengv;
@@ -80,9 +82,9 @@ shared_ptr<PlaneFinder> Initializator::planeFinder()
     return m_planeFinder;
 }
 
-bool Initializator::compute(const vector<Point2d> & firstFrame,
-                            const vector<Point2d> & secondFrame,
-                            const vector<Point2d> & thirdFrame)
+tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & firstFrame,
+                                                        const vector<Point2d> & secondFrame,
+                                                        const vector<Point2d> & thirdFrame)
 {
     assert(m_camera);
     assert(firstFrame.size() == secondFrame.size());
@@ -107,15 +109,50 @@ bool Initializator::compute(const vector<Point2d> & firstFrame,
     Vector3d thirdPosition;
     vector<int> inliers;
     points_t points;
+    // get result in opengv style
     tie(secondRotation, secondPosition,
         thirdRotation, thirdPosition,
         inliers, points) = _compute(firstDirs, secondDirs, thirdDirs);
 
-    Plane plane = m_planeFinder->find(points);
+    if (cast<int>(inliers.size()) >= m_minNumberPoints)
+    {
+        PlaneFinder::Plane plane = m_planeFinder->find(points);
 
-    transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdPosition);
+        Matrix3d firstRotation = Matrix3d::Identity();
+        Vector3d firstPosition = Vector3d::Zero();
 
-    return (cast<int>(inliers.size()) >= m_minNumberPoints);
+        if (!plane.inliers.empty()) // move all coordinates in plane space
+        {
+            transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdPosition);
+            Matrix3d invPlaneRotation = planeTransformation.block<3, 3>(0, 0).inverse();
+            Vector3d planePosition = planeTransformation.col(3);
+
+            firstRotation = (invPlaneRotation * firstRotation).eval();
+            firstPosition = (invPlaneRotation * (firstPosition - planePosition)).eval();
+
+            secondRotation = (invPlaneRotation * secondRotation).eval();
+            secondPosition = (invPlaneRotation * (secondPosition - planePosition)).eval();
+
+            thirdRotation = (invPlaneRotation * thirdRotation).eval();
+            thirdPosition = (invPlaneRotation * (thirdPosition - planePosition)).eval();
+
+            for (point_t & point : points)
+                point = (invPlaneRotation * (point - planePosition)).eval();
+
+        }
+
+        return make_tuple(true, Info {
+                              firstRotation,
+                              firstPosition,
+                              secondRotation,
+                              secondPosition,
+                              thirdRotation,
+                              thirdPosition,
+                              points
+                          });
+    }
+
+    return make_tuple(false, Info());
 }
 
 tuple<Matrix3d, Vector3d, Matrix3d, Vector3d, vector<int>, points_t>

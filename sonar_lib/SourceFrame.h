@@ -1,7 +1,6 @@
 #ifndef SONAR_SOURCEFRAME_H
 #define SONAR_SOURCEFRAME_H
 
-#include <cassert>
 #include "General/Image.h"
 
 namespace sonar {
@@ -21,6 +20,7 @@ public:
 
     ConstImage<uchar> image() const;
 
+    SourceFrame copy() const;
 
 private:
     Type m_type;

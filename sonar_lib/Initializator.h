@@ -11,17 +11,28 @@
 
 #include "General/Point2.h"
 
-#include "PlaneFinder.h"
-
 namespace sonar {
 
 // forward declaration
 class AbstractCamera;
+class PlaneFinder;
 
 class Initializator
 {
 public:
-    using Plane = PlaneFinder::Plane;
+    struct Info
+    {
+        opengv::rotation_t firstRotation;
+        opengv::translation_t firstPosition;
+
+        opengv::rotation_t secondRotation;
+        opengv::translation_t secondPosition;
+
+        opengv::rotation_t thirdRotation;
+        opengv::translation_t thirdPosition;
+
+        opengv::points_t points;
+    };
 
     Initializator();
 
@@ -40,9 +51,9 @@ public:
     std::shared_ptr<const PlaneFinder> planeFinder() const;
     std::shared_ptr<PlaneFinder> planeFinder();
 
-    bool compute(const std::vector<Point2d> & firstFrame,
-                 const std::vector<Point2d> & secondFrame,
-                 const std::vector<Point2d> & thirdFrame);
+    std::tuple<bool, Info> compute(const std::vector<Point2d> & firstFrame,
+                                   const std::vector<Point2d> & secondFrame,
+                                   const std::vector<Point2d> & thirdFrame);
 
 private:
     std::shared_ptr<const AbstractCamera> m_camera;
