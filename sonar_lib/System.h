@@ -32,6 +32,7 @@ class SourceFrame;
 class AbstractInitTracker;
 class Initializator;
 class MapFrame;
+class AbstractCamera;
 
 class System
 {
@@ -46,6 +47,9 @@ public:
     std::shared_ptr<const AbstractInitTracker> initTracker() const;
     std::shared_ptr<AbstractInitTracker> initTracker();
 
+    std::shared_ptr<const AbstractCamera> camera() const;
+    void setCamera(const std::shared_ptr<const AbstractCamera> & camera);
+
     void start();
     void reset();
 
@@ -58,6 +62,8 @@ private:
 
     std::shared_ptr<AbstractInitTracker> m_initTracker;
     std::shared_ptr<Initializator> m_initializator;
+
+    std::shared_ptr<const AbstractCamera> m_camera;
 };
 
 } // namespace sonar

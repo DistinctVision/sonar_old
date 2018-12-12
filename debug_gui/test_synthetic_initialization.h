@@ -1,0 +1,6 @@
+#ifndef TEST_SYNTETIC_INITIALIZATION_H
+#define TEST_SYNTETIC_INITIALIZATION_H
+
+bool test_synthetic_initialization();
+
+#endif // TEST_SYNTETIC_INITIALIZATION_H

@@ -36,9 +36,6 @@ public:
 
     Initializator();
 
-    std::shared_ptr<const AbstractCamera> camera() const;
-    void setCamera(const std::shared_ptr<const AbstractCamera> & camera);
-
     int minNumberPoints() const;
     void setMinNumberPoints(int minNumberPoints);
 
@@ -53,12 +50,15 @@ public:
 
     Info lastInitializationInfo() const;
 
-    std::tuple<bool, Info> compute(const std::vector<Point2d> & firstFrame,
+    std::tuple<bool, Info> compute(const std::shared_ptr<const AbstractCamera> & firstCamera,
+                                   const std::vector<Point2d> & firstFrame,
+                                   const std::shared_ptr<const AbstractCamera> & secondCamera,
                                    const std::vector<Point2d> & secondFrame,
-                                   const std::vector<Point2d> & thirdFrame);
+                                   const std::shared_ptr<const AbstractCamera> & thirdCamera,
+                                   const std::vector<Point2d> & thirdFrame,
+                                   bool alignByPlaneFlag = true);
 
 private:
-    std::shared_ptr<const AbstractCamera> m_camera;
     int m_minNumberPoints;
     float m_maxPixelError;
     int m_numberRansacIterations;
@@ -72,7 +72,8 @@ private:
                std::vector<int>, opengv::points_t>
     _compute(const opengv::bearingVectors_t & firstDirs,
              const opengv::bearingVectors_t & secondDirs,
-             const opengv::bearingVectors_t & thirdDirs) const;
+             const opengv::bearingVectors_t & thirdDirs,
+             double firstThreshold, double secondThreshold, double thirdThreshold) const;
 
     opengv::transformations_t _convert(const opengv::essentials_t & essentials) const;
 

@@ -61,6 +61,16 @@ shared_ptr<AbstractInitTracker> System::initTracker()
     return m_initTracker;
 }
 
+shared_ptr<const AbstractCamera> System::camera() const
+{
+    return m_camera;
+}
+
+void System::setCamera(const shared_ptr<const AbstractCamera> & camera)
+{
+    m_camera = camera;
+}
+
 void System::start()
 {
     if (m_trackingState == TrackingState::NotStarted)
@@ -77,6 +87,8 @@ void System::reset()
 
 shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
 {
+    assert(m_camera);
+
     switch (m_trackingState) {
 
     case TrackingState::NotStarted:
@@ -89,8 +101,11 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
             bool successFlag;
             Initializator::Info initInfo;
             tie(successFlag, initInfo) = m_initializator->compute(
+                        m_camera,
                         cast<double>(m_initTracker->capturedFramePoints(0)),
+                        m_camera,
                         cast<double>(m_initTracker->capturedFramePoints(1)),
+                        m_camera,
                         cast<double>(m_initTracker->capturedFramePoints(2)));
             if (!successFlag)
             {
@@ -99,7 +114,8 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
             }
             Matrix3d R = initInfo.thirdWorldRotation.inverse();
             Vector3d t = - R * initInfo.thirdWorldPosition;
-            return make_shared<MapFrame>(m_initTracker->capturedFrame(2), R, t);
+            return make_shared<MapFrame>(m_initTracker->capturedFrame(2),
+                                         m_camera, R, t);
         }
     } break;
 
@@ -108,7 +124,8 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
         Initializator::Info initInfo = m_initializator->lastInitializationInfo();
         Matrix3d R = initInfo.thirdWorldRotation.inverse();
         Vector3d t = - R * initInfo.thirdWorldPosition;
-        return make_shared<MapFrame>(make_shared<SourceFrame>(sourceFrame), R, t);
+        return make_shared<MapFrame>(make_shared<SourceFrame>(sourceFrame),
+                                     m_camera, R, t);
     }
 
     default:

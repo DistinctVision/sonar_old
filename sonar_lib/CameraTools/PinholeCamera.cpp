@@ -37,7 +37,7 @@ Vector3d PinholeCamera::toLocalDir(const Point2d & imagePoint) const
     return Eigen::Vector3d(d.x / m_pixelFocalLength.x, d.y / m_pixelFocalLength.y, 1.0);
 }
 
-Point2d PinholeCamera::toImagePoint(const Vector3d &localDir) const
+Point2d PinholeCamera::toImagePoint(const Vector3d & localDir) const
 {
     if (fabs(localDir.z()) < numeric_limits<double>::epsilon())
         return Point2d(0.0, 0.0);

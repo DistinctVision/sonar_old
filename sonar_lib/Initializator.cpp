@@ -32,16 +32,6 @@ Initializator::Initializator():
     m_planeFinder = make_shared<PlaneFinder>();
 }
 
-shared_ptr<const AbstractCamera> Initializator::camera() const
-{
-    return m_camera;
-}
-
-void Initializator::setCamera(const shared_ptr<const AbstractCamera> & camera)
-{
-    m_camera = camera;
-}
-
 int Initializator::minNumberPoints() const
 {
     return m_minNumberPoints;
@@ -87,11 +77,14 @@ Initializator::Info Initializator::lastInitializationInfo() const
     return m_lastInitializationInfo;
 }
 
-tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & firstFrame,
+tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<const AbstractCamera> & firstCamera,
+                                                        const vector<Point2d> & firstFrame,
+                                                        const std::shared_ptr<const AbstractCamera> & secondCamera,
                                                         const vector<Point2d> & secondFrame,
-                                                        const vector<Point2d> & thirdFrame)
+                                                        const std::shared_ptr<const AbstractCamera> & thirdCamera,
+                                                        const vector<Point2d> & thirdFrame,
+                                                        bool alignByPlaneFlag)
 {
-    assert(m_camera);
     assert(firstFrame.size() == secondFrame.size());
     assert(secondFrame.size() == thirdFrame.size());
 
@@ -103,10 +96,20 @@ tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & 
 
     for (size_t i = 0; i < numberPoints; ++i)
     {
-        firstDirs[i] = m_camera->toLocalDir(firstFrame[i]).normalized();
-        secondDirs[i] = m_camera->toLocalDir(secondFrame[i]).normalized();
-        thirdDirs[i] = m_camera->toLocalDir(thirdFrame[i]).normalized();
+        firstDirs[i] = firstCamera->toLocalDir(firstFrame[i]).normalized();
+        secondDirs[i] = firstCamera->toLocalDir(secondFrame[i]).normalized();
+        thirdDirs[i] = firstCamera->toLocalDir(thirdFrame[i]).normalized();
     }
+
+    double firstThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
+                                       cast<double>(max(firstCamera->imageSize().x,
+                                                        firstCamera->imageSize().y)))));
+    double secondThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
+                                        cast<double>(max(secondCamera->imageSize().x,
+                                                         secondCamera->imageSize().y)))));
+    double thirdThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
+                                       cast<double>(max(thirdCamera->imageSize().x,
+                                                        thirdCamera->imageSize().y)))));
 
     Matrix3d secondRotation;
     Vector3d secondPosition;
@@ -117,7 +120,8 @@ tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & 
     // get result in opengv style
     tie(secondRotation, secondPosition,
         thirdRotation, thirdPosition,
-        inliers, points) = _compute(firstDirs, secondDirs, thirdDirs);
+        inliers, points) = _compute(firstDirs, secondDirs, thirdDirs,
+                                    firstThreshold, secondThreshold, thirdThreshold);
 
     if (cast<int>(inliers.size()) >= m_minNumberPoints)
     {
@@ -126,7 +130,7 @@ tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & 
         Matrix3d firstRotation = Matrix3d::Identity();
         Vector3d firstPosition = Vector3d::Zero();
 
-        if (!plane.inliers.empty()) // move all coordinates in plane space
+        if (!plane.inliers.empty() && alignByPlaneFlag) // move all coordinates in plane space
         {
             transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdPosition);
             Matrix3d invPlaneRotation = planeTransformation.block<3, 3>(0, 0).inverse();
@@ -164,13 +168,10 @@ tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & 
 tuple<Matrix3d, Vector3d, Matrix3d, Vector3d, vector<int>, points_t>
 Initializator::_compute(const bearingVectors_t & firstDirs,
                         const bearingVectors_t & secondDirs,
-                        const bearingVectors_t & thirdDirs) const
+                        const bearingVectors_t & thirdDirs,
+                        double firstThreshold, double secondThreshold, double thirdThreshold) const
 {
     ///TODO use parallel calculating
-
-    const double threshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
-                                             cast<double>(max(m_camera->imageSize().x,
-                                                              m_camera->imageSize().y)))));
 
     size_t numberPoints = firstDirs.size();
 
@@ -201,6 +202,8 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     transformation_t best_thirdTransformation;
 
     relative_pose::CentralRelativeAdapter adapter(firstDirs, thirdDirs);
+
+    double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
 
     for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
     {
@@ -252,31 +255,31 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 Vector4d X = SVD.matrixV().col(3);
                 if (std::fabs(X(3)) < numeric_limits<double>::epsilon())
                 {
-                    error += threshold * 3.0;
+                    error += sumThresholds;
                     continue;
                 }
                 X /= X(3);
 
                 double firstError = 1.0 - firstDir.dot(X.segment<3>(0).normalized());
-                if (firstError > threshold)
+                if (firstError > firstThreshold)
                 {
-                    error += threshold * 3.0;
+                    error += sumThresholds;
                     continue;
                 }
 
                 Vector3d secondPoint = secondTransform * X;
                 double secondError = 1.0 - secondDir.dot(secondPoint.normalized());
-                if (secondError > threshold)
+                if (secondError > secondThreshold)
                 {
-                    error += threshold * 3.0;
+                    error += sumThresholds;
                     continue;
                 }
 
                 Vector3d thirdPoint = thirdTransform * X;
                 double thirdError = 1.0 - thirdDir.dot(thirdPoint.normalized());
-                if (thirdError > threshold)
+                if (thirdError > thirdThreshold)
                 {
-                    error += threshold * 3.0;
+                    error += sumThresholds;
                     continue;
                 }
 
@@ -398,13 +401,13 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
             }
             X /= X(3);
             samples_points[i] = X.segment<3>(0);
-            if (cast<float>(samples_points[i].z()) < numeric_limits<float>::epsilon())
+            if (cast<float>(firstDir.dot(samples_points[i])) < numeric_limits<float>::epsilon())
             {
                 successFLag = false;
                 break;
             }
             Vector3d pointInThirdSpace = (*it_T) * X;
-            if (cast<float>(pointInThirdSpace.z()) < numeric_limits<float>::epsilon())
+            if (cast<float>(thirdDir.dot(pointInThirdSpace)) < numeric_limits<float>::epsilon())
             {
                 successFLag = false;
                 break;
@@ -421,9 +424,10 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
 
         for (size_t i = 0; i < 5; ++i)
         {
+            const Vector3d & secondDir = secondDirs[cast<size_t>(samples[i])];
             Vector3d pointInSecondSpace = secondTransform.block<3, 3>(0, 0) * samples_points[i] +
                     secondTransform.col(3);
-            if (cast<float>(pointInSecondSpace.z()) < numeric_limits<float>::epsilon())
+            if (cast<float>(secondDir.dot(pointInSecondSpace)) < numeric_limits<float>::epsilon())
             {
                 successFLag = false;
                 break;
