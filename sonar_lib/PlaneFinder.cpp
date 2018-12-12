@@ -122,13 +122,20 @@ transformation_t PlaneFinder::getPlaneTransformation(const PlaneFinder::Plane & 
     ///TODO process bad situations
 
     Vector3d delta = viewPoint - plane.point;
-    Vector3d planeAxisX = plane.normal.cross(delta).normalized();
-    Vector3d planeAxisY = planeAxisX.cross(plane.normal);
+    Vector3d planeAxisZ = plane.normal;
+
+    if (planeAxisZ.dot(delta) > 0.0)
+    {
+        planeAxisZ = - planeAxisZ;
+    }
+
+    Vector3d planeAxisX = planeAxisZ.cross(delta).normalized();
+    Vector3d planeAxisY = planeAxisX.cross(planeAxisZ);
 
     transformation_t transformation;
     transformation.col(0) = planeAxisX;
     transformation.col(1) = planeAxisY;
-    transformation.col(2) = plane.normal;
+    transformation.col(2) = planeAxisZ;
     transformation.col(3) = plane.point;
 
     return transformation;
