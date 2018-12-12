@@ -22,14 +22,14 @@ class Initializator
 public:
     struct Info
     {
-        opengv::rotation_t firstRotation;
-        opengv::translation_t firstPosition;
+        opengv::rotation_t firstWorldRotation = opengv::rotation_t::Identity();
+        opengv::translation_t firstWorldPosition = opengv::translation_t::Zero();
 
-        opengv::rotation_t secondRotation;
-        opengv::translation_t secondPosition;
+        opengv::rotation_t secondWorldRotation = opengv::rotation_t::Identity();
+        opengv::translation_t secondWorldPosition = opengv::translation_t::Zero();
 
-        opengv::rotation_t thirdRotation;
-        opengv::translation_t thirdPosition;
+        opengv::rotation_t thirdWorldRotation = opengv::rotation_t::Identity();
+        opengv::translation_t thirdWorldPosition = opengv::translation_t::Zero();
 
         opengv::points_t points;
     };
@@ -51,6 +51,8 @@ public:
     std::shared_ptr<const PlaneFinder> planeFinder() const;
     std::shared_ptr<PlaneFinder> planeFinder();
 
+    Info lastInitializationInfo() const;
+
     std::tuple<bool, Info> compute(const std::vector<Point2d> & firstFrame,
                                    const std::vector<Point2d> & secondFrame,
                                    const std::vector<Point2d> & thirdFrame);
@@ -60,6 +62,8 @@ private:
     int m_minNumberPoints;
     float m_maxPixelError;
     int m_numberRansacIterations;
+
+    Info m_lastInitializationInfo;
 
     std::shared_ptr<PlaneFinder> m_planeFinder;
 

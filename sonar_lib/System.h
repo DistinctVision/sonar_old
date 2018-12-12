@@ -31,6 +31,7 @@ enum class ProcessingMode: int
 class SourceFrame;
 class AbstractInitTracker;
 class Initializator;
+class MapFrame;
 
 class System
 {
@@ -45,9 +46,10 @@ public:
     std::shared_ptr<const AbstractInitTracker> initTracker() const;
     std::shared_ptr<AbstractInitTracker> initTracker();
 
+    void start();
     void reset();
 
-    void process(const SourceFrame & sourceFrame);
+    std::shared_ptr<const MapFrame> process(const SourceFrame & sourceFrame);
 
 private:
     TrackingState m_trackingState;

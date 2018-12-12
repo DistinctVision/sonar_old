@@ -6,8 +6,7 @@ using namespace std;
 namespace sonar {
 
 CPU_InitTracker::CPU_InitTracker():
-    AbstractInitTracker(),
-    m_indexStep(0)
+    AbstractInitTracker()
 {
 }
 
@@ -31,20 +30,13 @@ OpticalFlow & CPU_InitTracker::opticalFlow()
     return m_opticalFlow;
 }
 
-void CPU_InitTracker::reset()
-{
-    m_indexStep = 0;
-    for (int i = 0; i < 3; ++i)
-        m_capturedFramePoints[i].clear();
-}
-
 bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
 {
     ///TODO make lk filter
 
-    assert(sourceFrame.type() == SourceFrame::Type::Image);
+    assert(sourceFrame.sourceType() == SourceFrame::SourceType::Image);
     ConstImage<uchar> image = sourceFrame.image();
-    switch (m_indexStep) {
+    switch (indexStep()) {
     case 0: {
         ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
         vector<FeatureDetector::FeatureCorner> corners = m_featureDetector.detectCorners(imagePyramid);
@@ -54,7 +46,7 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
             features[i] = cast<float>(corners[i].pos);
         m_capturedFramePoints[1] = features;
         m_opticalFlow.setFirstPyramid(imagePyramid);
-        ++m_indexStep;
+        _capture(sourceFrame);
     } break;
     case 1: {
         ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
@@ -99,27 +91,17 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
     }
     else
     {
-        float step = _medianDistance(m_capturedFramePoints[m_indexStep - 1],
-                                     m_capturedFramePoints[m_indexStep]);
+        float step = _medianDistance(m_capturedFramePoints[indexStep() - 1],
+                                     m_capturedFramePoints[indexStep()]);
         if (step > medianDistanceStep())
         {
-            ++m_indexStep;
-            if (m_indexStep >= 3)
+            _capture(sourceFrame);
+            if (indexStep() >= 3)
                 return true;
-            m_capturedFramePoints[m_indexStep] = m_capturedFramePoints[m_indexStep - 1];
+            m_capturedFramePoints[indexStep()] = m_capturedFramePoints[indexStep() - 1];
         }
     }
     return false;
-}
-
-bool CPU_InitTracker::isFinished() const
-{
-    return (m_indexStep == 3);
-}
-
-tuple<vector<Point2f>, vector<Point2f>, vector<Point2f>> CPU_InitTracker::getMotion() const
-{
-    return make_tuple(m_capturedFramePoints[0], m_capturedFramePoints[1], m_capturedFramePoints[2]);
 }
 
 float CPU_InitTracker::_medianDistance(const vector<Point2f> &pointsA,

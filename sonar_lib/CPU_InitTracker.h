@@ -14,30 +14,19 @@ class CPU_InitTracker:
 public:
     CPU_InitTracker();
 
-    void reset() override;
-
-    bool process(const SourceFrame & sourceFrame) override;
-
-    bool isFinished() const override;
-
-    std::tuple<std::vector<Point2f>,
-               std::vector<Point2f>,
-               std::vector<Point2f>> getMotion() const override;
-
-    int indexStep() const override;
-
     const FeatureDetector & featureTracker() const;
     FeatureDetector & featureTracker();
 
     const OpticalFlow & opticalFlow() const;
     OpticalFlow & opticalFlow();
 
+    bool process(const SourceFrame & sourceFrame) override;
+
 private:
     FeatureDetector m_featureDetector;
     OpticalFlow m_opticalFlow;
 
-    std::vector<Point2f> m_capturedFramePoints[3];
-    int m_indexStep;
+    std::vector<Point2f> m_currentPoints;
 
     float _medianDistance(const std::vector<Point2f> & pointsA,
                           const std::vector<Point2f> & pointsB) const;

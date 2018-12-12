@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include <vector>
+#include <array>
 
 #include "General/Point2.h"
 
@@ -22,21 +23,29 @@ public:
     int minNumberFeatures() const;
     void setMinNumberFeatures(int minNumberFeatures);
 
-    virtual void reset() = 0;
+    void reset();
+
+    bool isFinished() const;
+
+    int indexStep() const;
+
+    std::shared_ptr<SourceFrame> capturedFrame(int indexStep) const;
+    std::vector<Point2f> capturedFramePoints(int indexStep) const;
 
     virtual bool process(const SourceFrame & sourceFrame) = 0;
 
-    virtual bool isFinished() const = 0;
+protected:
+    virtual void _reset() = 0;
+    void _capture(const SourceFrame & sourceFrame);
 
-    virtual std::tuple<std::vector<Point2f>,
-                       std::vector<Point2f>,
-                       std::vector<Point2f>> getMotion() const = 0;
-
-    virtual int indexStep() const = 0;
+    std::vector<Point2f> m_capturedFramePoints[3];
 
 private:
     float m_medianDistanceStep;
     int m_minNumberFeatures;
+    int m_indexStep;
+
+    std::shared_ptr<SourceFrame> m_capturedFrames[3];
 };
 
 } // namespace sonar

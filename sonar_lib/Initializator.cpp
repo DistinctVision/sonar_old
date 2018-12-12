@@ -82,6 +82,11 @@ shared_ptr<PlaneFinder> Initializator::planeFinder()
     return m_planeFinder;
 }
 
+Initializator::Info Initializator::lastInitializationInfo() const
+{
+    return m_lastInitializationInfo;
+}
+
 tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & firstFrame,
                                                         const vector<Point2d> & secondFrame,
                                                         const vector<Point2d> & thirdFrame)
@@ -138,21 +143,22 @@ tuple<bool, Initializator::Info> Initializator::compute(const vector<Point2d> & 
 
             for (point_t & point : points)
                 point = (invPlaneRotation * (point - planePosition)).eval();
-
         }
 
-        return make_tuple(true, Info {
-                              firstRotation,
-                              firstPosition,
-                              secondRotation,
-                              secondPosition,
-                              thirdRotation,
-                              thirdPosition,
-                              points
-                          });
+        m_lastInitializationInfo.firstWorldRotation = firstRotation;
+        m_lastInitializationInfo.firstWorldPosition = firstPosition;
+        m_lastInitializationInfo.secondWorldRotation = secondRotation;
+        m_lastInitializationInfo.secondWorldPosition = secondPosition;
+        m_lastInitializationInfo.thirdWorldRotation = thirdRotation;
+        m_lastInitializationInfo.thirdWorldPosition = thirdPosition;
+        m_lastInitializationInfo.points = points;
+
+        return make_tuple(true, m_lastInitializationInfo);
     }
 
-    return make_tuple(false, Info());
+    m_lastInitializationInfo = Info();
+
+    return make_tuple(false, m_lastInitializationInfo);
 }
 
 tuple<Matrix3d, Vector3d, Matrix3d, Vector3d, vector<int>, points_t>

@@ -1,17 +1,23 @@
 #include "SourceFrame.h"
 #include <cassert>
 
+using namespace std;
+
 namespace sonar {
 
 SourceFrame::SourceFrame(const ImageRef<uchar> & image):
-    m_type(Type::Image),
+    m_sourceType(SourceType::Image),
     m_image(image)
 {
 }
 
-SourceFrame::Type SourceFrame::type() const
+SourceFrame::~SourceFrame()
 {
-    return m_type;
+}
+
+SourceFrame::SourceType SourceFrame::sourceType() const
+{
+    return m_sourceType;
 }
 
 ConstImage<uchar> SourceFrame::image() const
@@ -19,16 +25,16 @@ ConstImage<uchar> SourceFrame::image() const
     return m_image;
 }
 
-SourceFrame SourceFrame::copy() const
+shared_ptr<const SourceFrame> SourceFrame::sourceCopy() const
 {
-    switch (m_type) {
-    case Type::Image:
-        return SourceFrame(m_image.copy());
+    switch (m_sourceType) {
+    case SourceType::Image:
+        return make_shared<SourceFrame>(m_image.copy());
     default:
         break;
     }
     assert(false);
-    return SourceFrame(Image<uchar>());
+    return make_shared<SourceFrame>(Image<uchar>());
 }
 
 } // namespace sonar
