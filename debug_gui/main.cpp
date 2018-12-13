@@ -24,7 +24,7 @@ void runTests()
             ++nSuccess;
     }
     cout << "test result: " << nSuccess << " / " << nTest << endl;
-    assert(nSuccess == 100);
+    assert(nSuccess == nTest);
 }
 
 int main(int argc, char **argv)
