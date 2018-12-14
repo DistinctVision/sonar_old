@@ -29,13 +29,12 @@ public:
 
     int indexStep() const;
 
-    std::shared_ptr<SourceFrame> capturedFrame(int indexStep) const;
+    std::shared_ptr<const SourceFrame> capturedFrame(int indexStep) const;
     std::vector<Point2f> capturedFramePoints(int indexStep) const;
 
     virtual bool process(const SourceFrame & sourceFrame) = 0;
 
 protected:
-    virtual void _reset() = 0;
     void _capture(const SourceFrame & sourceFrame);
 
     std::vector<Point2f> m_capturedFramePoints[3];
@@ -45,7 +44,7 @@ private:
     int m_minNumberFeatures;
     int m_indexStep;
 
-    std::shared_ptr<SourceFrame> m_capturedFrames[3];
+    std::shared_ptr<const SourceFrame> m_capturedFrames[3];
 };
 
 } // namespace sonar

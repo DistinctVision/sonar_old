@@ -42,6 +42,11 @@ bool AbstractInitTracker::isFinished() const
     return (m_indexStep == 3);
 }
 
+int AbstractInitTracker::indexStep() const
+{
+    return m_indexStep;
+}
+
 void AbstractInitTracker::reset()
 {
     m_indexStep = 0;
@@ -50,16 +55,15 @@ void AbstractInitTracker::reset()
         m_capturedFrames[i].reset();
         m_capturedFramePoints[i].clear();
     }
-    _reset();
 }
 
-shared_ptr<SourceFrame> AbstractInitTracker::capturedFrame(int indexStep) const
+shared_ptr<const SourceFrame> AbstractInitTracker::capturedFrame(int indexStep) const
 {
     assert((m_indexStep >= 0) && (m_indexStep <= 2));
     return m_capturedFrames[cast<size_t>(indexStep)];
 }
 
-std::vector<Point2f> AbstractInitTracker::capturedFramePoints(int indexStep) const
+vector<Point2f> AbstractInitTracker::capturedFramePoints(int indexStep) const
 {
     assert((m_indexStep >= 0) && (m_indexStep <= 2));
     return m_capturedFramePoints[cast<size_t>(indexStep)];

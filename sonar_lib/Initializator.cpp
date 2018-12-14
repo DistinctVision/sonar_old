@@ -211,8 +211,8 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
         {
             swap(shuffled_indices[i],
                  shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
-            samples[i] = shuffled_indices[i];
         }
+        copy(shuffled_indices.begin(), shuffled_indices.begin() + 5, samples.begin());
 
         essentials = relative_pose::fivept_nister(adapter, samples);
         transformations_t thirdTransforms = _convert(essentials);

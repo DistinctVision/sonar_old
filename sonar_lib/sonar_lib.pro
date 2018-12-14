@@ -27,6 +27,8 @@ windows  {
     QMAKE_CXXFLAGS += /bigobj
 }
 
+QMAKE_CXXFLAGS += -Wno-unused-function
+
 include (external/external_libs.pri)
 
 include (General/General.pri)

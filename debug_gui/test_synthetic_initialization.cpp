@@ -57,9 +57,9 @@ bool compare(const Matrix3d & a, const Matrix3d & b)
 
 bool test_synthetic_initialization()
 {
-    auto camera = make_shared<AbstractCamera>(PinholeCamera(Point2d(100.0, 100.0),
-                                                            Point2d(50.0, 50.0),
-                                                            Point2i(100, 100)));
+    shared_ptr<AbstractCamera> camera(new PinholeCamera(Point2d(100.0, 100.0),
+                                                        Point2d(50.0, 50.0),
+                                                        Point2i(100, 100)));
 
     Vector3d scenePoint(0.0, 0.0, 100.0);
 
@@ -83,9 +83,9 @@ bool test_synthetic_initialization()
 
     points_t real_points;
     real_points.reserve(100);
-    vector<Point2d> first_image_points(real_points.size());
-    vector<Point2d> second_image_points(real_points.size());
-    vector<Point2d> third_image_points(real_points.size());
+    vector<Point2d> first_image_points(100);
+    vector<Point2d> second_image_points(100);
+    vector<Point2d> third_image_points(100);
     while (real_points.size() < 100)
     {
         Vector3d point(scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,

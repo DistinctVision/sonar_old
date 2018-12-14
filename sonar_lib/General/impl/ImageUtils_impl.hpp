@@ -357,8 +357,6 @@ Type Sampler_max<Compare>::operator () (const Type & v1_1, const Type & v1_2,
 template <typename SamplerType, typename Type>
 void halfSample(Image<Type> & out, const ImageRef<Type> & in)
 {
-    using BaseType = typename BaseElement<Type>::Type;
-
     assert((in.size() / 2) == out.size());
     SamplerType sampler;
     Point2i outP;

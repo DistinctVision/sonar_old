@@ -3,6 +3,7 @@
 #include "AbstractInitTracker.h"
 #include "CPU_InitTracker.h"
 #include "Initializator.h"
+#include "MapFrame.h"
 
 #include <Eigen/Eigen>
 

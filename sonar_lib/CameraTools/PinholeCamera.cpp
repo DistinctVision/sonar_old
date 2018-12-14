@@ -17,8 +17,8 @@ PinholeCamera::PinholeCamera(const Point2d & pixelFocalLength,
     m_pixelFocalLength(pixelFocalLength),
     m_pixelOpticalCenter(pixelOpticalCenter)
 {
-    assert((fabs(m_pixelFocalLength.x) < numeric_limits<double>::epsilon()) &&
-           (fabs(m_pixelFocalLength.y) < numeric_limits<double>::epsilon()));
+    assert((fabs(m_pixelFocalLength.x) > numeric_limits<double>::epsilon()) &&
+           (fabs(m_pixelFocalLength.y) > numeric_limits<double>::epsilon()));
 }
 
 Point2d PinholeCamera::pixelFocalLength() const
