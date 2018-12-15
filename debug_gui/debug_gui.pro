@@ -8,6 +8,7 @@ VERSION = 0.1
 CONFIG -= app_bundle
 
 include (../sonar_lib/external/external_libs.pri)
+include (../sonar_lib/external/opencv.pri)
 
 CONFIG(debug, debug|release) {
     MOC_DIR = debug/moc
