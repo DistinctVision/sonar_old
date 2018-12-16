@@ -7,8 +7,8 @@ VERSION = 0.1
 
 CONFIG -= app_bundle
 
-include (../sonar_lib/external/external_libs.pri)
-include (../sonar_lib/external/opencv.pri)
+include (../sonar/external/external_libs.pri)
+include (../sonar/external/opencv.pri)
 
 CONFIG(debug, debug|release) {
     MOC_DIR = debug/moc
@@ -16,20 +16,23 @@ CONFIG(debug, debug|release) {
     UI_DIR = debug/ui
     OBJECTS_DIR = debug/obj
 
-    LIBS += -L$$PWD/../qbuild/debug/ -lsonar_lib
+    PRE_TARGETDEPS += $$PWD/../qbuild/debug/sonar.lib
+    LIBS += -L$$PWD/../qbuild/debug/ -lsonar
 } else {
     MOC_DIR = release/moc
     RCC_DIR = release/rcc
     UI_DIR = release/ui
     OBJECTS_DIR = release/obj
 
-    LIBS += -L$$PWD/../qbuild/release/ -lsonar_lib
+    LIBS += -L$$PWD/../qbuild/release/ -lsonar
 }
 
-QMAKE_CXXFLAGS += -Wno-unused-function
+linux {
+    QMAKE_CXXFLAGS += -Wno-unused-function
+}
 
-INCLUDEPATH += $$PWD/../sonar_lib
-DEPENDPATH += $$PWD/../sonar_lib
+INCLUDEPATH += $$PWD/../sonar/include
+DEPENDPATH += $$PWD/../sonar/include
 
 SOURCES += \
     main.cpp \

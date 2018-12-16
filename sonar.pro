@@ -3,9 +3,9 @@ TEMPLATE = subdirs
 CONFIG += ordered
 
 SUBDIRS += \
-    sonar_lib \
+    sonar \
     debug_gui
 
-qmlgui.depends =  sonar_lib
+debug_gui.depends = sonar
 
 
