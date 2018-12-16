@@ -380,7 +380,7 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
     secondTransformations.clear();
     secondTransformations.reserve(thirdTransformations.size());
     opengv::points_t samples_points(5);
-    for (auto it_T = secondTransformations.cbegin(); it_T != secondTransformations.cend(); )
+    for (auto it_T = thirdTransformations.cbegin(); it_T != thirdTransformations.cend(); )
     {
         bool successFLag = true;
 
@@ -425,7 +425,7 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
         }
 
         absolute_pose::CentralAbsoluteAdapter adapter(adapterSecondDirs, samples_points);
-        transformation_t secondTransform = absolute_pose::epnp(adapter);
+        transformation_t secondTransform = absolute_pose::gpnp(adapter);
 
         for (size_t i = 0; i < 5; ++i)
         {
