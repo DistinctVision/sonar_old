@@ -189,7 +189,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     mt19937 rnd_gen;
     uniform_int_distribution<int> rnd(0, cast<int>(numberPoints) - 1);
 
-    vector<int> samples(5);
+    vector<int> samples(6);
 
     rnd_gen.seed(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
 
@@ -212,7 +212,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
     for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
     {
-        for (size_t i = 0; i < 5; ++i)
+        for (size_t i = 0; i < 6; ++i)
         {
             swap(shuffled_indices[i],
                  shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
@@ -373,18 +373,19 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
         secondDirs[cast<size_t>(samples[1])],
         secondDirs[cast<size_t>(samples[2])],
         secondDirs[cast<size_t>(samples[3])],
-        secondDirs[cast<size_t>(samples[4])]
+        secondDirs[cast<size_t>(samples[4])],
+        secondDirs[cast<size_t>(samples[5])],
     };
     JacobiSVD<Matrix4d> SVD;
     Matrix4d M;
     secondTransformations.clear();
     secondTransformations.reserve(thirdTransformations.size());
-    opengv::points_t samples_points(5);
+    opengv::points_t samples_points(6);
     for (auto it_T = thirdTransformations.cbegin(); it_T != thirdTransformations.cend(); )
     {
         bool successFLag = true;
 
-        for (size_t i = 0; i < 5; ++i)
+        for (size_t i = 0; i < 6; ++i)
         {
             const Vector3d & firstDir = firstDirs[cast<size_t>(samples[i])];
             const Vector3d & thirdDir = thirdDirs[cast<size_t>(samples[i])];
@@ -425,9 +426,9 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
         }
 
         absolute_pose::CentralAbsoluteAdapter adapter(adapterSecondDirs, samples_points);
-        transformation_t secondTransform = absolute_pose::gpnp(adapter);
+        transformation_t secondTransform = absolute_pose::epnp(adapter);
 
-        for (size_t i = 0; i < 5; ++i)
+        for (size_t i = 0; i < 6; ++i)
         {
             const Vector3d & secondDir = secondDirs[cast<size_t>(samples[i])];
             Vector3d pointInSecondSpace = secondTransform.block<3, 3>(0, 0) * samples_points[i] +

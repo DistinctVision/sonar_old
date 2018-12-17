@@ -16,6 +16,8 @@ void runTests()
 
     srand(static_cast<unsigned int>(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count()));
 
+    system_clock::time_point start_time = system_clock::now();
+
     int nTest = 100;
     int nSuccess = 0;
     for (int i = 0; i < nTest; ++i)
@@ -23,11 +25,14 @@ void runTests()
         if (test_synthetic_initialization())
             ++nSuccess;
     }
-    cout << "test result: " << nSuccess << " / " << nTest << endl;
+    auto end_time = system_clock::now();
+    int delta_time = static_cast<int>(duration_cast<milliseconds>(end_time - start_time).count() / 100);
+
+    cout << "test result: " << nSuccess << " / " << nTest << " time = " << delta_time << "ms" << endl;
     assert(nSuccess == nTest);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 

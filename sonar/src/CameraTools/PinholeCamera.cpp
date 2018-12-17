@@ -49,8 +49,8 @@ Point2d PinholeCamera::toImagePoint(const Vector3d & localDir) const
         return Point2d(0.0, 0.0);
     Point2d uv(localDir.x() / localDir.z(),
                localDir.y() / localDir.z());
-    return Point2d((uv.x + m_pixelOpticalCenter.x) * m_pixelFocalLength.x,
-                   (uv.y + m_pixelOpticalCenter.y) * m_pixelFocalLength.y);
+    return Point2d(uv.x * m_pixelFocalLength.x + m_pixelOpticalCenter.x,
+                   uv.y * m_pixelFocalLength.y + m_pixelOpticalCenter.y);
 }
 
 } // namespace sonar

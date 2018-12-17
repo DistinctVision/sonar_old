@@ -40,3 +40,5 @@ SOURCES += \
 
 HEADERS += \
     test_synthetic_initialization.h
+
+DEFINES += _USE_MATH_DEFINES

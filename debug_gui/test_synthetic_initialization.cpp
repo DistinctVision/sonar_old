@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <chrono>
+#include <cmath>
 #include <random>
 #include <Eigen/Eigen>
 
@@ -27,7 +28,7 @@ Vector3d generateRandomVector3d(double scale = 1.0)
 
 Matrix3d generateRandomRotationMatrix()
 {
-    return math_utils::exp_rotationMatrix(generateRandomVector3d());
+    return math_utils::exp_rotationMatrix(generateRandomVector3d(M_PI));
 }
 
 bool compare(const Vector3d & a, const Vector3d & b)
@@ -67,10 +68,12 @@ bool test_synthetic_initialization()
     Vector3d real_firstWorldPosition = Vector3d::Zero();
 
     Matrix3d real_secondWorldRotation = generateRandomRotationMatrix();
+    real_secondWorldRotation = math_utils::exp_rotationMatrix(Vector3d(M_PI * 0.5, 0.0, 0.0));
     Vector3d real_secondWorldPosition = scenePoint - real_secondWorldRotation *
             Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
 
     Matrix3d real_thirdWorldRotation = generateRandomRotationMatrix();
+    real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI, 0.0, 0.0));
     Vector3d real_thirdWorldPosition = scenePoint - real_thirdWorldRotation *
             Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
 
@@ -80,6 +83,10 @@ bool test_synthetic_initialization()
     Vector3d second_t = - second_R * real_secondWorldPosition;
     Matrix3d third_R = real_thirdWorldRotation.inverse();
     Vector3d third_t = - third_R * real_thirdWorldPosition;
+
+    Vector3d v1 = first_R * scenePoint + first_t;
+    Vector3d v2 = second_R * scenePoint + second_t;
+    Vector3d v3 = third_R * scenePoint + third_t;
 
     points_t real_points;
     real_points.reserve(100);
@@ -93,13 +100,13 @@ bool test_synthetic_initialization()
                                              (rand() % 200) * 0.1 - 10.0));
 
         Vector3d first_local = first_R * point + first_t;
-        if (first_local.z() < 0.0)
+        if (first_local.z() <= 0.0)
             continue;
         Vector3d second_local = second_R * point + second_t;
-        if (second_local.z() < 0.0)
+        if (second_local.z() <= 0.0)
             continue;
         Vector3d third_local = third_R * point + third_t;
-        if (third_local.z() < 0.0)
+        if (third_local.z() <= 0.0)
             continue;
         first_image_points[real_points.size()] = camera->toImagePoint(first_local);
         second_image_points[real_points.size()] = camera->toImagePoint(second_local);
