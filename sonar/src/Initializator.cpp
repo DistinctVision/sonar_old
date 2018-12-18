@@ -117,15 +117,12 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
                                        cast<double>(max(thirdCamera->imageSize().x,
                                                         thirdCamera->imageSize().y)))));
 
-    Matrix3d secondRotation;
-    Vector3d secondPosition;
-    Matrix3d thirdRotation;
-    Vector3d thirdPosition;
+    transformation_t secondTransform;
+    transformation_t thirdTransform;
     vector<int> inliers;
     points_t points;
     // get result in opengv style
-    tie(secondRotation, secondPosition,
-        thirdRotation, thirdPosition,
+    tie(secondTransform, thirdTransform,
         inliers, points) = _compute(firstDirs, secondDirs, thirdDirs,
                                     firstThreshold, secondThreshold, thirdThreshold);
 
@@ -133,10 +130,7 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
     {
         PlaneFinder::Plane plane = m_planeFinder->find(points);
 
-        Matrix3d firstRotation = Matrix3d::Identity();
-        Vector3d firstPosition = Vector3d::Zero();
-
-        if (!plane.inliers.empty() && alignByPlaneFlag) // move all coordinates in plane space
+        /*if (!plane.inliers.empty() && alignByPlaneFlag) // move all coordinates in plane space
         {
             transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdPosition);
             Matrix3d invPlaneRotation = planeTransformation.block<3, 3>(0, 0).inverse();
@@ -153,14 +147,11 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
 
             for (point_t & point : points)
                 point = (invPlaneRotation * (point - planePosition)).eval();
-        }
+        }*/
+        m_lastInitializationInfo.firstTransfrom = transformation_t::Identity();
+        m_lastInitializationInfo.secondTransfrom = secondTransform;
+        m_lastInitializationInfo.thirdTransfrom = thirdTransform;
 
-        m_lastInitializationInfo.firstWorldRotation = firstRotation;
-        m_lastInitializationInfo.firstWorldPosition = firstPosition;
-        m_lastInitializationInfo.secondWorldRotation = secondRotation;
-        m_lastInitializationInfo.secondWorldPosition = secondPosition;
-        m_lastInitializationInfo.thirdWorldRotation = thirdRotation;
-        m_lastInitializationInfo.thirdWorldPosition = thirdPosition;
         m_lastInitializationInfo.points = points;
 
         return make_tuple(true, m_lastInitializationInfo);
@@ -171,7 +162,7 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
     return make_tuple(false, m_lastInitializationInfo);
 }
 
-tuple<Matrix3d, Vector3d, Matrix3d, Vector3d, vector<int>, points_t>
+tuple<transformation_t, transformation_t, vector<int>, points_t>
 Initializator::_compute(const bearingVectors_t & firstDirs,
                         const bearingVectors_t & secondDirs,
                         const bearingVectors_t & thirdDirs,
@@ -221,10 +212,6 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
         essentials = relative_pose::fivept_nister(adapter, samples);
         transformations_t thirdTransforms = _convert(essentials);
-        for (auto it = thirdTransforms.begin(); it != thirdTransforms.end(); ++it)
-        {
-            it->col(3) = it->col(3).normalized().eval();
-        }
 
         transformations_t secondTransforms;
         _filterResult(secondTransforms, thirdTransforms, samples, firstDirs, secondDirs, thirdDirs);
@@ -272,7 +259,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                     continue;
                 }
 
-                Vector3d secondPoint = secondTransform.block<3, 3>(0, 0).transpose() * (X.segment<3>(0) - secondTransform.col(3));
+                Vector3d secondPoint = secondTransform * X;
                 double secondError = 1.0 - secondDir.dot(secondPoint.normalized());
                 if (secondError > secondThreshold)
                 {
@@ -280,7 +267,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                     continue;
                 }
 
-                Vector3d thirdPoint = thirdTransform.block<3, 3>(0, 0).transpose() * (X.segment<3>(0) - thirdTransform.col(3));
+                Vector3d thirdPoint = thirdTransform * X;
                 double thirdError = 1.0 - thirdDir.dot(thirdPoint.normalized());
                 if (thirdError > thirdThreshold)
                 {
@@ -306,10 +293,8 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
         }
     }
 
-    return make_tuple(best_secondTransformation.block<3, 3>(0, 0), best_secondTransformation.col(3),
-                      best_thirdTransformation.block<3, 3>(0, 0), best_thirdTransformation.col(3),
-                      move(best_inliers),
-                      move(best_points));
+    return make_tuple(best_secondTransformation, best_thirdTransformation,
+                      move(best_inliers), move(best_points));
 }
 
 transformations_t Initializator::_convert(const essentials_t & essentials) const
@@ -324,8 +309,8 @@ transformations_t Initializator::_convert(const essentials_t & essentials) const
     for (auto it_E = essentials.cbegin(); it_E != essentials.cend(); ++it_E)
     {
         SVD.compute((*it_E), Eigen::ComputeFullV | Eigen::ComputeFullU);
-        Matrix3d R_a = SVD.matrixU() * H * SVD.matrixV().transpose();
-        Matrix3d R_b = SVD.matrixU() * H.transpose() * SVD.matrixV().transpose();
+        Matrix3d R_a = SVD.matrixV() * H.transpose() * SVD.matrixU().transpose();
+        Matrix3d R_b = SVD.matrixV() * H * SVD.matrixU().transpose();
         Eigen::Vector3d singularValues = SVD.singularValues();
 
         // check for bad essential matrix
@@ -346,16 +331,16 @@ transformations_t Initializator::_convert(const essentials_t & essentials) const
             R_b = - R_b;
 
         transformation.block<3, 3>(0, 0) = R_a;
-        transformation.col(3) = t_a;
+        transformation.col(3) = - R_a * t_a;
         transformations.push_back(transformation);
         transformation.block<3, 3>(0, 0) = R_a;
-        transformation.col(3) = t_b;
+        transformation.col(3) = - R_a * t_b;
         transformations.push_back(transformation);
         transformation.block<3, 3>(0, 0) = R_b;
-        transformation.col(3) = t_a;
+        transformation.col(3) = - R_b * t_a;
         transformations.push_back(transformation);
         transformation.block<3, 3>(0, 0) = R_b;
-        transformation.col(3) = t_b;
+        transformation.col(3) = - R_b * t_b;
         transformations.push_back(transformation);
     }
     return transformations;
@@ -426,15 +411,16 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
         }
 
         absolute_pose::CentralAbsoluteAdapter adapter(adapterSecondDirs, samples_points);
-        transformation_t secondTransform = absolute_pose::epnp(adapter);
-        Matrix3d invS = secondTransform.block<3, 3>(0, 0).inverse();
-        Vector3d inv_t = - invS * secondTransform.col(3);
+        transformation_t inv_secondTransform = absolute_pose::epnp(adapter);
+        transformation_t secondTransform;
+        secondTransform.block<3, 3>(0, 0) = inv_secondTransform.block<3, 3>(0, 0).transpose();
+        secondTransform.col(3) = - secondTransform.block<3, 3>(0, 0) * inv_secondTransform.col(3);
 
         for (size_t i = 0; i < 6; ++i)
         {
             const Vector3d & secondDir = secondDirs[cast<size_t>(samples[i])];
-            Vector3d pointInSecondSpace = secondTransform.block<3, 3>(0, 0).transpose() *
-                    (samples_points[i] - secondTransform.col(3));
+            Vector3d pointInSecondSpace =
+                    secondTransform.block<3, 3>(0, 0) * samples_points[i] + secondTransform.col(3);
             if (cast<float>(secondDir.dot(pointInSecondSpace)) < numeric_limits<float>::epsilon())
             {
                 successFLag = false;

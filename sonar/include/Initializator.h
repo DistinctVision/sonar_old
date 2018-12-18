@@ -28,14 +28,9 @@ class Initializator
 public:
     struct Info
     {
-        opengv::rotation_t firstWorldRotation = opengv::rotation_t::Identity();
-        opengv::translation_t firstWorldPosition = opengv::translation_t::Zero();
-
-        opengv::rotation_t secondWorldRotation = opengv::rotation_t::Identity();
-        opengv::translation_t secondWorldPosition = opengv::translation_t::Zero();
-
-        opengv::rotation_t thirdWorldRotation = opengv::rotation_t::Identity();
-        opengv::translation_t thirdWorldPosition = opengv::translation_t::Zero();
+        opengv::transformation_t firstTransfrom = opengv::transformation_t::Identity();
+        opengv::transformation_t secondTransfrom = opengv::transformation_t::Identity();
+        opengv::transformation_t thirdTransfrom = opengv::transformation_t::Identity();
 
         opengv::points_t points;
     };
@@ -73,9 +68,7 @@ private:
 
     std::shared_ptr<PlaneFinder> m_planeFinder;
 
-    std::tuple<Eigen::Matrix3d, Eigen::Vector3d,
-               Eigen::Matrix3d, Eigen::Vector3d,
-               std::vector<int>, opengv::points_t>
+    std::tuple<opengv::transformation_t, opengv::transformation_t, std::vector<int>, opengv::points_t>
     _compute(const opengv::bearingVectors_t & firstDirs,
              const opengv::bearingVectors_t & secondDirs,
              const opengv::bearingVectors_t & thirdDirs,

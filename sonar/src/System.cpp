@@ -119,8 +119,8 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
                 m_initTracker->reset();
                 break;
             }
-            Matrix3d R = initInfo.thirdWorldRotation.inverse();
-            Vector3d t = - R * initInfo.thirdWorldPosition;
+            Matrix3d R = initInfo.thirdTransfrom.block<3, 3>(0, 0);
+            Vector3d t = initInfo.thirdTransfrom.col(3);
             return make_shared<MapFrame>(m_initTracker->capturedFrame(2),
                                          m_camera, R, t);
         }
@@ -129,8 +129,8 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
     case TrackingState::Tracking: {
         m_trackingQuality = TrackingQuality::Good;
         Initializator::Info initInfo = m_initializator->lastInitializationInfo();
-        Matrix3d R = initInfo.thirdWorldRotation.inverse();
-        Vector3d t = - R * initInfo.thirdWorldPosition;
+        Matrix3d R = initInfo.thirdTransfrom.block<3, 3>(0, 0);
+        Vector3d t = initInfo.thirdTransfrom.col(3);
         return make_shared<MapFrame>(make_shared<SourceFrame>(sourceFrame),
                                      m_camera, R, t);
     }

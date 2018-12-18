@@ -73,7 +73,7 @@ bool test_synthetic_initialization()
             Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
 
     Matrix3d real_thirdWorldRotation = generateRandomRotationMatrix();
-    real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI * 0.5, 0.0, 0.0));
+    //real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI * 0.5, 0.0, 0.0));
     Vector3d real_thirdWorldPosition = scenePoint - real_thirdWorldRotation *
             Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
 
@@ -114,14 +114,6 @@ bool test_synthetic_initialization()
         real_points.push_back(point);
     }
 
-    double nScale = 1.0 / real_thirdWorldPosition.norm();
-    real_secondWorldPosition *= nScale;
-    real_thirdWorldPosition *= nScale;
-    for (auto it = real_points.begin(); it != real_points.end(); ++it)
-    {
-        (*it) *= nScale;
-    }
-
     Initializator::Info info;
     bool successFlag;
 
@@ -132,26 +124,26 @@ bool test_synthetic_initialization()
     if (!successFlag)
         return false;
 
-    {
-        double nScale = real_thirdWorldPosition.norm() / info.thirdWorldPosition.norm();
+   {
+        double nScale = third_t.norm() / info.thirdTransfrom.col(3).norm();
 
-        info.secondWorldPosition *= nScale;
-        info.thirdWorldPosition *= nScale;
+        info.secondTransfrom.col(3) *= nScale;
+        info.thirdTransfrom.col(3) *= nScale;
         for (Vector3d & point : info.points)
             point *= nScale;
     }
 
-    if (!compare(info.firstWorldRotation, real_firstWorldRotation))
+    if (!compare(info.firstTransfrom.block<3, 3>(0, 0), first_R))
         return false;
-    if (!compare(info.firstWorldPosition, real_firstWorldPosition))
+    if (!compare(info.firstTransfrom.col(3), first_t))
         return false;
-    if (!compare(info.secondWorldRotation, real_secondWorldRotation))
+    if (!compare(info.secondTransfrom.block<3, 3>(0, 0), second_R))
         return false;
-    if (!compare(info.secondWorldPosition, real_secondWorldPosition))
+    if (!compare(info.secondTransfrom.col(3), second_t))
         return false;
-    if (!compare(info.thirdWorldRotation, real_thirdWorldRotation))
+    if (!compare(info.thirdTransfrom.block<3, 3>(0, 0), third_R))
         return false;
-    if (!compare(info.thirdWorldPosition, real_thirdWorldPosition))
+    if (!compare(info.thirdTransfrom.col(3), third_t))
         return false;
 
     for (size_t i = 0; i < real_points.size(); ++i)
