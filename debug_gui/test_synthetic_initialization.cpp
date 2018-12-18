@@ -49,7 +49,7 @@ bool compare(const Matrix3d & a, const Matrix3d & b)
     {
         for (int j = 0; j < 3; ++j)
         {
-            if (d(i, j) > 1e-3)
+            if (d(i, j) > 1e-2)
                 return false;
         }
     }
@@ -68,12 +68,12 @@ bool test_synthetic_initialization()
     Vector3d real_firstWorldPosition = Vector3d::Zero();
 
     Matrix3d real_secondWorldRotation = generateRandomRotationMatrix();
-    real_secondWorldRotation = math_utils::exp_rotationMatrix(Vector3d(M_PI * 0.5, 0.0, 0.0));
+    //real_secondWorldRotation = math_utils::exp_rotationMatrix(Vector3d(M_PI * 0.5, 0.0, 0.0));
     Vector3d real_secondWorldPosition = scenePoint - real_secondWorldRotation *
             Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
 
     Matrix3d real_thirdWorldRotation = generateRandomRotationMatrix();
-    real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI, 0.0, 0.0));
+    real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI * 0.5, 0.0, 0.0));
     Vector3d real_thirdWorldPosition = scenePoint - real_thirdWorldRotation *
             Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
 
@@ -112,6 +112,14 @@ bool test_synthetic_initialization()
         second_image_points[real_points.size()] = camera->toImagePoint(second_local);
         third_image_points[real_points.size()] = camera->toImagePoint(third_local);
         real_points.push_back(point);
+    }
+
+    double nScale = 1.0 / real_thirdWorldPosition.norm();
+    real_secondWorldPosition *= nScale;
+    real_thirdWorldPosition *= nScale;
+    for (auto it = real_points.begin(); it != real_points.end(); ++it)
+    {
+        (*it) *= nScale;
     }
 
     Initializator::Info info;

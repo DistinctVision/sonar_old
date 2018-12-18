@@ -103,8 +103,8 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
     for (size_t i = 0; i < numberPoints; ++i)
     {
         firstDirs[i] = firstCamera->toLocalDir(firstFrame[i]).normalized();
-        secondDirs[i] = firstCamera->toLocalDir(secondFrame[i]).normalized();
-        thirdDirs[i] = firstCamera->toLocalDir(thirdFrame[i]).normalized();
+        secondDirs[i] = secondCamera->toLocalDir(secondFrame[i]).normalized();
+        thirdDirs[i] = thirdCamera->toLocalDir(thirdFrame[i]).normalized();
     }
 
     double firstThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
@@ -221,13 +221,17 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
         essentials = relative_pose::fivept_nister(adapter, samples);
         transformations_t thirdTransforms = _convert(essentials);
+        for (auto it = thirdTransforms.begin(); it != thirdTransforms.end(); ++it)
+        {
+            it->col(3) = it->col(3).normalized().eval();
+        }
 
         transformations_t secondTransforms;
         _filterResult(secondTransforms, thirdTransforms, samples, firstDirs, secondDirs, thirdDirs);
         assert(secondTransforms.size() == thirdTransforms.size());
 
-        JacobiSVD<Matrix<double, 6, 4>> SVD;
-        Matrix<double, 6, 4> M;
+        JacobiSVD<Matrix<double, 4, 4>> SVD;
+        Matrix<double, 4, 4> M;
         for (size_t i = 0; i < secondTransforms.size(); ++i)
         {
             const opengv::transformation_t & secondTransform = secondTransforms[i];
@@ -243,16 +247,12 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 const bearingVector_t & thirdDir = thirdDirs[j];
 
                 M.row(0) = firstDir.x() * Vector4d(0.0, 0.0, 1.0, 0.0) -
-                                      firstDir.z() * Vector4d(1.0, 0.0, 0.0, 0.0);
+                        firstDir.z() * Vector4d(1.0, 0.0, 0.0, 0.0);
                 M.row(1) = firstDir.y() * Vector4d(0.0, 0.0, 1.0, 0.0) -
-                                      firstDir.z() * Vector4d(0.0, 1.0, 0.0, 0.0);
-                M.row(2) = secondDir.x() * secondTransform.row(2) -
-                        secondDir.z() * secondTransform.row(0);
-                M.row(3) = secondDir.y() * secondTransform.row(2) -
-                        secondDir.z() * secondTransform.row(1);
-                M.row(4) = thirdDir.x() * thirdTransform.row(2) -
+                        firstDir.z() * Vector4d(0.0, 1.0, 0.0, 0.0);
+                M.row(2) = thirdDir.x() * thirdTransform.row(2) -
                         thirdDir.z() * thirdTransform.row(0);
-                M.row(5) = thirdDir.y() * thirdTransform.row(2) -
+                M.row(3) = thirdDir.y() * thirdTransform.row(2) -
                         thirdDir.z() * thirdTransform.row(1);
 
                 SVD.compute(M, ComputeFullV);
@@ -272,7 +272,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                     continue;
                 }
 
-                Vector3d secondPoint = secondTransform * X;
+                Vector3d secondPoint = secondTransform.block<3, 3>(0, 0).transpose() * (X.segment<3>(0) - secondTransform.col(3));
                 double secondError = 1.0 - secondDir.dot(secondPoint.normalized());
                 if (secondError > secondThreshold)
                 {
@@ -280,7 +280,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                     continue;
                 }
 
-                Vector3d thirdPoint = thirdTransform * X;
+                Vector3d thirdPoint = thirdTransform.block<3, 3>(0, 0).transpose() * (X.segment<3>(0) - thirdTransform.col(3));
                 double thirdError = 1.0 - thirdDir.dot(thirdPoint.normalized());
                 if (thirdError > thirdThreshold)
                 {
@@ -412,7 +412,7 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
                 successFLag = false;
                 break;
             }
-            Vector3d pointInThirdSpace = (*it_T) * X;
+            Vector3d pointInThirdSpace = it_T->block<3, 3>(0, 0).transpose() * (samples_points[i] - it_T->col(3));
             if (cast<float>(thirdDir.dot(pointInThirdSpace)) < numeric_limits<float>::epsilon())
             {
                 successFLag = false;
@@ -427,12 +427,14 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
 
         absolute_pose::CentralAbsoluteAdapter adapter(adapterSecondDirs, samples_points);
         transformation_t secondTransform = absolute_pose::epnp(adapter);
+        Matrix3d invS = secondTransform.block<3, 3>(0, 0).inverse();
+        Vector3d inv_t = - invS * secondTransform.col(3);
 
         for (size_t i = 0; i < 6; ++i)
         {
             const Vector3d & secondDir = secondDirs[cast<size_t>(samples[i])];
-            Vector3d pointInSecondSpace = secondTransform.block<3, 3>(0, 0) * samples_points[i] +
-                    secondTransform.col(3);
+            Vector3d pointInSecondSpace = secondTransform.block<3, 3>(0, 0).transpose() *
+                    (samples_points[i] - secondTransform.col(3));
             if (cast<float>(secondDir.dot(pointInSecondSpace)) < numeric_limits<float>::epsilon())
             {
                 successFLag = false;
