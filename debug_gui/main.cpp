@@ -18,18 +18,18 @@ void runTests()
 
     system_clock::time_point start_time = system_clock::now();
 
-    int nTest = 100;
+    int nTests = 100;
     int nSuccess = 0;
-    for (int i = 0; i < nTest; ++i)
+    for (int i = 0; i < nTests; ++i)
     {
         if (test_synthetic_initialization())
             ++nSuccess;
     }
     auto end_time = system_clock::now();
-    int delta_time = static_cast<int>(duration_cast<milliseconds>(end_time - start_time).count() / 100);
+    int delta_time = static_cast<int>(duration_cast<milliseconds>(end_time - start_time).count() / nTests);
 
-    cout << "test result: " << nSuccess << " / " << nTest << " time = " << delta_time << "ms" << endl;
-    assert(nSuccess == nTest);
+    cout << "test result: " << nSuccess << " / " << nTests << " time = " << delta_time << "ms" << endl;
+    assert(nSuccess == nTests);
 }
 
 int main(int argc, char ** argv)

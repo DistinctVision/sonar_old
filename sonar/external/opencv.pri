@@ -21,6 +21,11 @@ windows {
             LIBS += -L$$(OPENCV_LIB_PATH) -lopencv_world$$OPENCV_VERSION
         }
     }
+} else: unix {
+    INCLUDEPATH += /usr/local/include/opencv4
+    DEPENDPATH += /usr/local/include/opencv4
+
+    LIBS += -L/usr/local/lib -lopencv_world
 } else {
     error("OpenCV not included")
 }

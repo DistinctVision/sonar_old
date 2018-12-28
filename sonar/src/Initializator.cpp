@@ -180,9 +180,9 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     mt19937 rnd_gen;
     uniform_int_distribution<int> rnd(0, cast<int>(numberPoints) - 1);
 
-    vector<int> samples(6);
+    vector<int> samples(5);
 
-    rnd_gen.seed(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+    rnd_gen.seed(cast<size_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()));
 
     essentials_t essentials;
 
@@ -191,11 +191,10 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     points.reserve(numberPoints);
     inliers.reserve(numberPoints);
 
-    double bestError = numeric_limits<double>::max();
+    double best_error = numeric_limits<double>::max();
     points_t best_points;
     vector<int> best_inliers;
-    transformation_t best_secondTransformation;
-    transformation_t best_thirdTransformation;
+    essential_t best_essentialMatrix;
 
     relative_pose::CentralRelativeAdapter adapter(firstDirs, thirdDirs);
 
@@ -203,7 +202,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
     for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
     {
-        for (size_t i = 0; i < 6; ++i)
+        for (size_t i = 0; i < 5; ++i)
         {
             swap(shuffled_indices[i],
                  shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
@@ -211,8 +210,46 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
         copy(shuffled_indices.begin(), shuffled_indices.begin() + 5, samples.begin());
 
         essentials = relative_pose::fivept_nister(adapter, samples);
-        transformations_t thirdTransforms = _convert(essentials);
 
+        for (auto itE = essentials.cbegin(); itE != essentials.cend(); ++itE)
+        {
+            double error = 0.0;
+            for (size_t i = 0; i < numberPoints; ++i)
+            {
+                const bearingVector_t & firstDir = firstDirs[i];
+                const bearingVector_t & thirdDir = thirdDirs[i];
+
+                error += std::min(std::fabs(thirdDir.transpose() * (*itE) * firstDir),
+                                  thirdThreshold);
+                error += std::min(std::fabs(firstDir.transpose() * itE->transpose() * thirdDir),
+                                  firstThreshold);
+            }
+
+            if (error < best_error)
+            {
+                best_error = error;
+                best_essentialMatrix = (*itE);
+                inliers = samples;
+            }
+        }
+    }
+
+    transformation_t best_secondTransformation;
+    transformation_t best_thirdTransformation;
+    transformations_t possibles_thirdTransforms = _convert({ best_essentialMatrix });
+    samples = inliers;
+    for (size_t i = 0; i < numberPoints; ++i)
+        shuffled_indices[i] = cast<int>(i);
+    for (size_t i = 0; i < samples.size(); ++i)
+        shuffled_indices.erase(shuffled_indices.begin() + samples[i]);
+    samples.resize(6);
+    for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
+    {
+        swap(shuffled_indices[0],
+             shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
+        samples[5] = shuffled_indices[0];
+
+        transformations_t thirdTransforms = possibles_thirdTransforms;
         transformations_t secondTransforms;
         _filterResult(secondTransforms, thirdTransforms, samples, firstDirs, secondDirs, thirdDirs);
         assert(secondTransforms.size() == thirdTransforms.size());
@@ -280,9 +317,9 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 points.push_back(X.segment<3>(0));
             }
 
-            if (error < bestError)
+            if (error < best_error)
             {
-                bestError = error;
+                best_error = error;
                 best_secondTransformation = secondTransform;
                 best_thirdTransformation = thirdTransform;
                 best_points = move(points);

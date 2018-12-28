@@ -84,10 +84,6 @@ bool test_synthetic_initialization()
     Matrix3d third_R = real_thirdWorldRotation.inverse();
     Vector3d third_t = - third_R * real_thirdWorldPosition;
 
-    Vector3d v1 = first_R * scenePoint + first_t;
-    Vector3d v2 = second_R * scenePoint + second_t;
-    Vector3d v3 = third_R * scenePoint + third_t;
-
     points_t real_points;
     real_points.reserve(100);
     vector<Point2d> first_image_points(100);
