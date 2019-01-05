@@ -20,10 +20,10 @@ android {
 }
 
 CONFIG(debug, debug|release) {
-    DESTDIR += $$PWD/../qbuild/debug
+    #DESTDIR += $$PWD/../qbuild/debug
     OBJECTS_DIR = debug/obj
 } else {
-    DESTDIR += $$PWD/../qbuild/release
+    #DESTDIR += $$PWD/../qbuild/release
     OBJECTS_DIR = release/obj
 }
 

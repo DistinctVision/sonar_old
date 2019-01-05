@@ -4,7 +4,13 @@ linux {
     INCLUDEPATH += /usr/local/include/opengv
     DEPENDPATH += /usr/local/include/opengv
 
-    LIBS += -L/usr/local/lib/ -lopengv
+    CONFIG(debug, debug|release) {
+        #PRE_TARGETDEPS += /usr/local/lib/libopengvd.a
+        LIBS += -L/usr/local/lib -lopengv
+    } else {
+        #PRE_TARGETDEPS += /usr/local/lib/libopengv.a
+        LIBS += -L/usr/local/lib -lopengv
+    }
 } else: windows {
     TEST_OPENGV_DIR = $$(OPENGV_DIR)
     isEmpty(TEST_OPENGV_DIR) {

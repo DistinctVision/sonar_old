@@ -5,6 +5,7 @@
 #include <CameraTools/PinholeCamera.h>
 #include <Initializator.h>
 #include <MapFrame.h>
+#include <System.h>
 
 #include <General/MathUtils.h>
 
