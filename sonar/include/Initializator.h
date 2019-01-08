@@ -43,8 +43,11 @@ public:
     float maxPixelError() const;
     void setMaxPixelError(float maxPixelError);
 
-    int numberRansacIterations() const;
-    void setNumberRansacIterations(int numberRansacIterations);
+    int numberRansacEssentialsIterations() const;
+    void setNumberRansacEssentialsIterations(int numberRansacIterations);
+
+    int numberRansacTransformsIterations() const;
+    void setNumberRansacTransformIterations(int numberRansacIterations);
 
     std::shared_ptr<const PlaneFinder> planeFinder() const;
     std::shared_ptr<PlaneFinder> planeFinder();
@@ -62,7 +65,8 @@ public:
 private:
     int m_minNumberPoints;
     float m_maxPixelError;
-    int m_numberRansacIterations;
+    int m_numberRansacEssentialsIterations;
+    int m_numberRansacTransformsIterations;
 
     Info m_lastInitializationInfo;
 

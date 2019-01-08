@@ -31,6 +31,7 @@
 #if defined(OPENCV_LIB)
 #include <opencv2/cv.hpp>
 #endif
+
 namespace sonar {
 
 namespace debug {

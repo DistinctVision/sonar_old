@@ -33,7 +33,8 @@ namespace sonar {
 Initializator::Initializator():
     m_minNumberPoints(20),
     m_maxPixelError(2.0f),
-    m_numberRansacIterations(300)
+    m_numberRansacEssentialsIterations(300),
+    m_numberRansacTransformsIterations(30)
 {
     m_planeFinder = make_shared<PlaneFinder>();
 }
@@ -58,14 +59,24 @@ void Initializator::setMaxPixelError(float maxPixelError)
     m_maxPixelError = maxPixelError;
 }
 
-int Initializator::numberRansacIterations() const
+int Initializator::numberRansacEssentialsIterations() const
 {
-    return m_numberRansacIterations;
+    return m_numberRansacEssentialsIterations;
 }
 
-void Initializator::setNumberRansacIterations(int numberRansacIterations)
+void Initializator::setNumberRansacEssentialsIterations(int numberRansacIterations)
 {
-    m_numberRansacIterations = numberRansacIterations;
+    m_numberRansacEssentialsIterations = numberRansacIterations;
+}
+
+int Initializator::numberRansacTransformsIterations() const
+{
+    return m_numberRansacTransformsIterations;
+}
+
+void Initializator::setNumberRansacTransformIterations(int numberRansacIterations)
+{
+    m_numberRansacTransformsIterations = numberRansacIterations;
 }
 
 shared_ptr<const PlaneFinder> Initializator::planeFinder() const
@@ -200,7 +211,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
     double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
 
-    for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
+    for (int iteration = 0; iteration < m_numberRansacEssentialsIterations; ++iteration)
     {
         for (size_t i = 0; i < 5; ++i)
         {
@@ -219,10 +230,9 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 const bearingVector_t & firstDir = firstDirs[i];
                 const bearingVector_t & thirdDir = thirdDirs[i];
 
-                error += std::min(std::fabs(thirdDir.transpose() * (*itE) * firstDir),
-                                  thirdThreshold);
-                error += std::min(std::fabs(firstDir.transpose() * itE->transpose() * thirdDir),
-                                  firstThreshold);
+                double e = std::fabs(thirdDir.transpose() * itE->transpose() * firstDir);
+
+                error += std::min(e, firstThreshold) + std::min(e, thirdThreshold);
             }
 
             if (error < best_error)
@@ -232,6 +242,8 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 inliers = samples;
             }
         }
+
+        iteration += std::max(cast<int>(essentials.size()), 1);
     }
 
     transformation_t best_secondTransformation;
@@ -241,9 +253,15 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     for (size_t i = 0; i < numberPoints; ++i)
         shuffled_indices[i] = cast<int>(i);
     for (size_t i = 0; i < samples.size(); ++i)
-        shuffled_indices.erase(shuffled_indices.begin() + samples[i]);
+    {
+        shuffled_indices[cast<size_t>(samples[i])] = shuffled_indices.back();
+        shuffled_indices.resize(shuffled_indices.size() - 1);
+    }
     samples.resize(6);
-    for (int iteration = 0; iteration < m_numberRansacIterations; ++iteration)
+    best_error = numeric_limits<double>::max();
+    JacobiSVD<Matrix<double, 4, 4>> SVD;
+    Matrix<double, 4, 4> M;
+    for (int iteration = 0; iteration < 30; )
     {
         swap(shuffled_indices[0],
              shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
@@ -254,8 +272,6 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
         _filterResult(secondTransforms, thirdTransforms, samples, firstDirs, secondDirs, thirdDirs);
         assert(secondTransforms.size() == thirdTransforms.size());
 
-        JacobiSVD<Matrix<double, 4, 4>> SVD;
-        Matrix<double, 4, 4> M;
         for (size_t i = 0; i < secondTransforms.size(); ++i)
         {
             const opengv::transformation_t & secondTransform = secondTransforms[i];
@@ -328,6 +344,8 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 inliers.reserve(numberPoints);
             }
         }
+
+        iteration += std::max(cast<int>(secondTransforms.size()), 1);
     }
 
     return make_tuple(best_secondTransformation, best_thirdTransformation,

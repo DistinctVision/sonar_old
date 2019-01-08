@@ -38,5 +38,6 @@ int main(int argc, char ** argv)
 
     runTests();
 
-    return app.exec();
+    //return app.exec();
+    return 0;
 }
