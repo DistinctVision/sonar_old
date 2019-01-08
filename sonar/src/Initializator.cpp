@@ -128,12 +128,11 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
                                        cast<double>(max(thirdCamera->imageSize().x,
                                                         thirdCamera->imageSize().y)))));
 
-    transformation_t secondTransform;
-    transformation_t thirdTransform;
     vector<int> inliers;
     points_t points;
     // get result in opengv style
-    tie(secondTransform, thirdTransform,
+    m_lastInitializationInfo.firstTransfrom = transformation_t::Identity();
+    tie(m_lastInitializationInfo.secondTransfrom, m_lastInitializationInfo.thirdTransfrom,
         inliers, points) = _compute(firstDirs, secondDirs, thirdDirs,
                                     firstThreshold, secondThreshold, thirdThreshold);
 
@@ -141,27 +140,28 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
     {
         PlaneFinder::Plane plane = m_planeFinder->find(points);
 
-        /*if (!plane.inliers.empty() && alignByPlaneFlag) // move all coordinates in plane space
+        transformation_t & firstTransform = m_lastInitializationInfo.firstTransfrom;
+        transformation_t & secondTransform = m_lastInitializationInfo.secondTransfrom;
+        transformation_t & thirdTransform = m_lastInitializationInfo.thirdTransfrom;
+        if (!plane.inliers.empty() && alignByPlaneFlag) // move all coordinates in plane space
         {
-            transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdPosition);
-            Matrix3d invPlaneRotation = planeTransformation.block<3, 3>(0, 0).inverse();
+            Vector3d thirdWorldPosition = - thirdTransform.block<3, 3>(0, 0).inverse() * thirdTransform.col(3);
+
+            transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdWorldPosition);
+            Matrix3d planeRotation = planeTransformation.block<3, 3>(0, 0);
+            Matrix3d invPlaneRotation = planeRotation.inverse();
             Vector3d planePosition = planeTransformation.col(3);
 
-            firstRotation = (invPlaneRotation * firstRotation).eval();
-            firstPosition = (invPlaneRotation * (firstPosition - planePosition)).eval();
-
-            secondRotation = (invPlaneRotation * secondRotation).eval();
-            secondPosition = (invPlaneRotation * (secondPosition - planePosition)).eval();
-
-            thirdRotation = (invPlaneRotation * thirdRotation).eval();
-            thirdPosition = (invPlaneRotation * (thirdPosition - planePosition)).eval();
+            firstTransform.col(3) = planePosition;
+            firstTransform.block<3, 3>(0, 0) = planeRotation;
+            secondTransform.col(3) += secondTransform.block<3, 3>(0, 0) * planePosition;
+            secondTransform.block<3, 3>(0, 0) *= planeRotation;
+            thirdTransform.col(3) += thirdTransform.block<3, 3>(0, 0) * planePosition;
+            thirdTransform.block<3, 3>(0, 0) *= planeRotation;
 
             for (point_t & point : points)
                 point = (invPlaneRotation * (point - planePosition)).eval();
-        }*/
-        m_lastInitializationInfo.firstTransfrom = transformation_t::Identity();
-        m_lastInitializationInfo.secondTransfrom = secondTransform;
-        m_lastInitializationInfo.thirdTransfrom = thirdTransform;
+        }
 
         m_lastInitializationInfo.points = points;
 
@@ -169,7 +169,6 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
     }
 
     m_lastInitializationInfo = Info();
-
     return make_tuple(false, m_lastInitializationInfo);
 }
 

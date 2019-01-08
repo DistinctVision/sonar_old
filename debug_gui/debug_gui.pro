@@ -45,9 +45,11 @@ DEPENDPATH += $$PWD/../sonar/include
 
 SOURCES += \
     main.cpp \
-    test_synthetic_initialization.cpp
+    test_synthetic_initialization.cpp \
+    test_demo.cpp
 
 HEADERS += \
-    test_synthetic_initialization.h
+    test_synthetic_initialization.h \
+    test_demo.h
 
 DEFINES += _USE_MATH_DEFINES
