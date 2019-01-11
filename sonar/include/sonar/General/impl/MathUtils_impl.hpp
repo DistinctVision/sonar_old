@@ -7,8 +7,6 @@
 #ifndef SONAR_MATHUTILS_IMPL_HPP
 #define SONAR_MATHUTILS_IMPL_HPP
 
-#include "../MathUtils.h"
-
 namespace sonar {
 
 namespace math_utils {

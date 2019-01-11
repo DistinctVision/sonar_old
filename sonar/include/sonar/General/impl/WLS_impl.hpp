@@ -7,8 +7,6 @@
 #ifndef SONAR_WLS_IMPL_HPP
 #define SONAR_WLS_IMPL_HPP
 
-#include "../WLS.h"
-
 namespace sonar {
 
 template < typename Type, int _size, class DecompositionType >

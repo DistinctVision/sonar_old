@@ -7,8 +7,6 @@
 #ifndef SONAR_IMAGE_IMPL_HPP
 #define SONAR_IMAGE_IMPL_HPP
 
-#include "../Image.h"
-
 namespace sonar {
 
 template < typename Type >

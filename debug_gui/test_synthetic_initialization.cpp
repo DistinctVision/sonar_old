@@ -2,12 +2,12 @@
 
 #include <opengv/types.hpp>
 
-#include <CameraTools/PinholeCamera.h>
-#include <Initializator.h>
-#include <MapFrame.h>
-#include <System.h>
+#include <sonar/CameraTools/PinholeCamera.h>
+#include <sonar/Initializator.h>
+#include <sonar/MapFrame.h>
+#include <sonar/System.h>
 
-#include <General/MathUtils.h>
+#include <sonar/General/MathUtils.h>
 
 #include <memory>
 #include <chrono>

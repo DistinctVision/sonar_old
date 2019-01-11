@@ -4,11 +4,11 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "AbstractInitTracker.h"
+#include <sonar/AbstractInitTracker.h>
 
 #include <cassert>
 
-#include <General/cast.h>
+#include <sonar/General/cast.h>
 
 using namespace std;
 

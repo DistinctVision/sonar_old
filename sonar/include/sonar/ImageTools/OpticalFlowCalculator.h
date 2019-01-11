@@ -7,7 +7,7 @@
 #ifndef SONAR_OPTICALFLOWCALCULATOR
 #define SONAR_OPTICALFLOWCALCULATOR
 
-#include "General/Image.h"
+#include <sonar/General/Image.h>
 
 namespace sonar {
 

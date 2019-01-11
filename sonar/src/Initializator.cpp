@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "Initializator.h"
+#include <sonar/Initializator.h>
 
 #include <cassert>
 #include <cmath>
@@ -18,10 +18,10 @@
 #include <opengv/absolute_pose/CentralAbsoluteAdapter.hpp>
 #include <opengv/absolute_pose/methods.hpp>
 
-#include "General/cast.h"
-#include "CameraTools/AbstractCamera.h"
+#include <sonar/General/cast.h>
+#include <sonar/CameraTools/AbstractCamera.h>
 
-#include "PlaneFinder.h"
+#include <sonar/PlaneFinder.h>
 
 using namespace std;
 using namespace std::chrono;

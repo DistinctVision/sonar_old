@@ -13,9 +13,10 @@
 #include <tuple>
 
 #include <Eigen/Core>
+
 #include <opengv/types.hpp>
 
-#include "General/Point2.h"
+#include <sonar/General/Point2.h>
 
 namespace sonar {
 

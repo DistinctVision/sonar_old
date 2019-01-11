@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "SourceFrame.h"
+#include <sonar/SourceFrame.h>
 #include <cassert>
 
 using namespace std;

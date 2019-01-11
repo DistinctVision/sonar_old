@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "General/Image.h"
+#include <sonar/General/Image.h>
 
 namespace sonar {
 

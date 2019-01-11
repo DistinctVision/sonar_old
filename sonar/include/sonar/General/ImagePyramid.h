@@ -9,8 +9,9 @@
 
 #include <cassert>
 #include <vector>
-#include "Image.h"
-#include "ImageUtils.h"
+
+#include <sonar/General/Image.h>
+#include <sonar/General/ImageUtils.h>
 
 namespace sonar {
 

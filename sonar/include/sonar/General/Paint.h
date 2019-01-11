@@ -9,8 +9,9 @@
 
 #include <cassert>
 #include <utility>
-#include "Point2.h"
-#include "Image.h"
+
+#include <sonar/General/Point2.h>
+#include <sonar/General/Image.h>
 
 namespace sonar {
 

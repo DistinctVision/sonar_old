@@ -9,9 +9,10 @@
 
 #include <vector>
 #include <utility>
-#include "General/Image.h"
-#include "General/ImagePyramid.h"
-#include "OpticalFlowCalculator.h"
+
+#include <sonar/General/Image.h>
+#include <sonar/General/ImagePyramid.h>
+#include <sonar/ImageTools/OpticalFlowCalculator.h>
 
 namespace sonar {
 

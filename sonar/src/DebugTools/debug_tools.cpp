@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "DebugTools/debug_tools.h"
+#include <sonar/DebugTools/debug_tools.h>
 
 using namespace std;
 using namespace sonar::image_utils;

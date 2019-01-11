@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "CPU_InitTracker.h"
+#include <sonar/CPU_InitTracker.h>
 #include <algorithm>
 
 using namespace std;

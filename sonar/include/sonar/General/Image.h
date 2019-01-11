@@ -16,8 +16,8 @@
 #include <cmath>
 #include <algorithm>
 
-#include "Point2.h"
-#include "cast.h"
+#include <sonar/General/Point2.h>
+#include <sonar/General/cast.h>
 
 #if defined(QT_CORE_LIB)
 #include <qglobal.h>

@@ -7,7 +7,7 @@
 #ifndef SONAR_PINHOLECAMERA_H
 #define SONAR_PINHOLECAMERA_H
 
-#include "AbstractCamera.h"
+#include <sonar/CameraTools/AbstractCamera.h>
 
 namespace sonar {
 

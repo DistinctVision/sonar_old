@@ -8,9 +8,10 @@
 #define SONAR_FEATUREDETECTOR_H
 
 #include <vector>
-#include "General/Image.h"
-#include "General/ImagePyramid.h"
-#include "FastCorner.h"
+
+#include <sonar/General/Image.h>
+#include <sonar/General/ImagePyramid.h>
+#include <sonar/ImageTools/FastCorner.h>
 
 namespace sonar {
 

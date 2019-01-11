@@ -18,10 +18,10 @@
 #include <utility>
 #include <vector>
 
-#include <General/Image.h>
-#include <General/ImageUtils.h>
-
 #include <Eigen/Eigen>
+
+#include <sonar/General/Image.h>
+#include <sonar/General/ImageUtils.h>
 
 // Сейчас это обертка над функциями opencv
 // Обертка создана для отключения возможности быстрого отключения всего дебага

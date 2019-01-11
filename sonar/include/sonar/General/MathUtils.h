@@ -17,12 +17,12 @@
 #include <cstdlib>
 #include<iostream>
 
-#include <General/Point2.h>
-#include <General/cast.h>
-
 #include <Eigen/Core>
 #include <Eigen/SVD>
 #include <Eigen/Geometry>
+
+#include <sonar/General/Point2.h>
+#include <sonar/General/cast.h>
 
 namespace sonar {
 

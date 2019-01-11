@@ -1,4 +1,4 @@
-#include "ImageTools/FastCorner.h"
+#include <sonar/ImageTools/FastCorner.h>
 #include <cmath>
 
 namespace sonar {

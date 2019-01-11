@@ -11,13 +11,14 @@
 #include <limits>
 #include <climits>
 #include <cassert>
-#include "Image.h"
-
-#include <General/cast.h>
-#include <General/MathUtils.h>
-#include <General/Paint.h>
 
 #include <Eigen/Core>
+
+#include <sonar/General/Image.h>
+
+#include <sonar/General/cast.h>
+#include <sonar/General/MathUtils.h>
+#include <sonar/General/Paint.h>
 
 #if QT_MULTIMEDIA_LIB
 #include <QImage>

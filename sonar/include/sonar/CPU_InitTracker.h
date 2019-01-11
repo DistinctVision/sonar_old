@@ -7,10 +7,10 @@
 #ifndef SONAR_CPU_INITTRACKER_H
 #define SONAR_CPU_INITTRACKER_H
 
-#include "AbstractInitTracker.h"
+#include <sonar/AbstractInitTracker.h>
 
-#include "ImageTools/FeatureDetector.h"
-#include "ImageTools/OpticalFlow.h"
+#include <sonar/ImageTools/FeatureDetector.h>
+#include <sonar/ImageTools/OpticalFlow.h>
 
 namespace sonar {
 

@@ -12,7 +12,7 @@
 #include <vector>
 #include <cmath>
 
-#include "cast.h"
+#include <sonar/General/cast.h>
 
 namespace sonar {
 

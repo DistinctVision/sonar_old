@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "CameraTools/AbstractCamera.h"
+#include <sonar/CameraTools/AbstractCamera.h>
 
 #include <cassert>
 

@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "MapFrame.h"
+#include <sonar/MapFrame.h>
 
 using namespace std;
 using namespace Eigen;

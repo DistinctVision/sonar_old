@@ -7,8 +7,6 @@
 #ifndef SONAR_IMAGEUTILS_IMPL_HPP
 #define SONAR_IMAGEUTILS_IMPL_HPP
 
-#include "../ImageUtils.h"
-
 namespace sonar {
 
 namespace image_utils {

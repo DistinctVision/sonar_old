@@ -9,7 +9,7 @@
 
 #include <Eigen/Core>
 
-#include "General/Point2.h"
+#include <sonar/General/Point2.h>
 
 namespace sonar {
 

@@ -8,8 +8,9 @@
 #define SONAR_FASTCORNER_H
 
 #include <vector>
-#include "General/Point2.h"
-#include "General/Image.h"
+
+#include <sonar/General/Point2.h>
+#include <sonar/General/Image.h>
 
 namespace sonar {
 

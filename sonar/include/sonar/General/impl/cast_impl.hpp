@@ -7,8 +7,6 @@
 #ifndef SONAR_CAST_IMPL_HPP
 #define SONAR_CAST_IMPL_HPP
 
-#include "../cast.h"
-
 namespace sonar {
 
 template <typename CastType>

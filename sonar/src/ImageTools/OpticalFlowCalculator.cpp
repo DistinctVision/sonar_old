@@ -1,4 +1,4 @@
-#include "ImageTools/OpticalFlowCalculator.h"
+#include <sonar/ImageTools/OpticalFlowCalculator.h>
 #include <Eigen/Core>
 #include <cmath>
 #include <limits>
@@ -77,9 +77,9 @@ void OpticalFlowCalculator::_setSigmaGaussian(float sigma)
 
 void OpticalFlowCalculator::_solveGaussian()
 {
-    double maxErrorSquared = 0.0f;
+    double maxErrorSquared = 0.0;
     float sigmaSquare = m_sigmaGaussian * m_sigmaGaussian;
-    float k1 = (float)(1.0 / (2.0 * M_PI * sigmaSquare));
+    float k1 = cast<float>(1.0 / (2.0 * M_PI * sigmaSquare));
     float invK2 = 1.0f / (2.0f * sigmaSquare);
     float sumK = 0.0f;
     Point2i p;
@@ -99,7 +99,7 @@ void OpticalFlowCalculator::_solveGaussian()
         gaussian_data[k] /= sumK;
     maxErrorSquared /= sumK;
     if (maxErrorSquared > numeric_limits<float>::epsilon())
-        m_invMaxErrorSquared = (float)(1.0 / maxErrorSquared);
+        m_invMaxErrorSquared = cast<float>(1.0 / maxErrorSquared);
     else
         m_invMaxErrorSquared = 0.0f;
 }
@@ -167,7 +167,7 @@ void OpticalFlowCalculator::getSubPixelImageF(Image<float> & outImage,
                                               const ImageRef<uchar> & image,
                                               const Point2f & beginPoint)
 {
-    Point2i beginPoint_i((int)floor(beginPoint.x), (int)floor(beginPoint.y));
+    Point2i beginPoint_i(cast<int>(floor(beginPoint.x)), cast<int>(floor(beginPoint.y)));
     assert((beginPoint_i.x >= 0) && (beginPoint_i.y >= 0));
     assert(((beginPoint_i.x + outImage.width() + 1) <= image.width()) &&
             ((beginPoint_i.y + outImage.height() + 1) <= image.height()));
@@ -209,7 +209,7 @@ void OpticalFlowCalculator::getSubPixelImage(Image<uchar> & outImage,
                                              const ImageRef<uchar> & image,
                                              const Point2f & beginPoint)
 {
-    Point2i beginPoint_i((int)floor(beginPoint.x), (int)floor(beginPoint.y));
+    Point2i beginPoint_i(cast<int>(floor(beginPoint.x)), cast<int>(floor(beginPoint.y)));
     assert((beginPoint_i.x >= 0) && (beginPoint_i.y >= 0));
     assert(((beginPoint_i.x + outImage.width() + 1) <= image.width()) &&
            ((beginPoint_i.y + outImage.height() + 1) <= image.height()));
@@ -229,8 +229,8 @@ void OpticalFlowCalculator::getSubPixelImage(Image<uchar> & outImage,
     Point2i p;
     for (p.y = 0; p.y < outImage.height(); ++p.y) {
         for (p.x = 0; p.x < outImage.width(); ++p.x) {
-            outStr[p.x] = (uchar)(wTL * imageStr[p.x] + wTR * imageStr[p.x + 1] +
-                                  wBL * imageStrNext[p.x] + wBR * imageStrNext[p.x + 1]);
+            outStr[p.x] = cast<uchar>(wTL * imageStr[p.x] + wTR * imageStr[p.x + 1] +
+                                      wBL * imageStrNext[p.x] + wBR * imageStrNext[p.x + 1]);
         }
         imageStr = imageStrNext;
         imageStrNext = &imageStrNext[image.widthStep()];
@@ -383,8 +383,8 @@ TrackingResult OpticalFlowCalculator::_tracking2dOnSecondImage(Point2f & positio
     Point2f prevDelta;
 
     for (int iteration = 0; iteration < m_numberIterations; ++iteration) {
-        position_i.x = (int)floor(position.x);
-        position_i.y = (int)floor(position.y);
+        position_i.x = cast<int>(floor(position.x));
+        position_i.y = cast<int>(floor(position.y));
 
         if ((position_i.x < m_begin_second.x) || (position_i.y < m_begin_second.y) ||
             (position_i.x >= m_end_second.x) || (position_i.y >= m_end_second.y))
@@ -493,8 +493,8 @@ TrackingResult OpticalFlowCalculator::_tracking2dOnSecondImageLK(Point2f & posit
     Point2f prevDelta;
 
     for (int iteration = 0; iteration < m_numberIterations; ++iteration) {
-        position_i.x = (int)floor(position.x);
-        position_i.y = (int)floor(position.y);
+        position_i.x = cast<int>(floor(position.x));
+        position_i.y = cast<int>(floor(position.y));
 
         if ((position_i.x < m_begin_second.x) || (position_i.y < m_begin_second.y) ||
             (position_i.x >= m_end_second.x) || (position_i.y >= m_end_second.y))
@@ -556,7 +556,7 @@ TrackingResult OpticalFlowCalculator::_horizontalTrackingOnSecondImage(Point2f &
     Point2i position_i;
     Point2f sub_pix;
 
-    position_i.y = (int)floor(position.y);
+    position_i.y = cast<int>(floor(position.y));
     sub_pix.y = position.y - position_i.y;
 
     if ((position_i.y < m_begin_second.y) || (position_i.y >= m_end_second.y))
@@ -603,7 +603,7 @@ TrackingResult OpticalFlowCalculator::_horizontalTrackingOnSecondImage(Point2f &
     float prevDelta;
 
     for (int iteration = 0; iteration < m_numberIterations; ++iteration) {
-        position_i.x = (int)floor(position.x);
+        position_i.x = cast<int>(floor(position.x));
 
         if ((position_i.x < m_begin_second.x) || (position_i.x >= m_end_second.x))
             return TrackingResult::Fail;
@@ -663,7 +663,7 @@ TrackingResult OpticalFlowCalculator::_horizontalTrackingOnSecondImageLK(Point2f
     Point2i position_i;
     Point2f sub_pix;
 
-    position_i.y = (int)floor(position.y);
+    position_i.y = cast<int>(floor(position.y));
     sub_pix.y = position.y - position_i.y;
 
     if ((position_i.y < m_begin_second.y) || (position_i.y >= m_end_second.y))
@@ -703,7 +703,7 @@ TrackingResult OpticalFlowCalculator::_horizontalTrackingOnSecondImageLK(Point2f
     float prevDelta;
 
     for (int iteration = 0; iteration < m_numberIterations; ++iteration) {
-        position_i.x = (int)floor(position.x);
+        position_i.x = cast<int>(floor(position.x));
 
         if ((position_i.x < m_begin_second.x) || (position_i.x >= m_end_second.x))
             return TrackingResult::Fail;

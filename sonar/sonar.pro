@@ -27,7 +27,8 @@ CONFIG(debug, debug|release) {
     OBJECTS_DIR = release/obj
 }
 
-INCLUDEPATH += $$PWD/include/sonar
+INCLUDEPATH += $$PWD/include
+DEPENDPATH += $$PWD/include
 
 windows  {
     QMAKE_CXXFLAGS += /bigobj

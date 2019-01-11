@@ -8,9 +8,10 @@
 #define SONAR_MAPFRAME_H
 
 #include <memory>
+
 #include <Eigen/Eigen>
 
-#include "SourceFrame.h"
+#include <sonar/SourceFrame.h>
 
 namespace sonar {
 

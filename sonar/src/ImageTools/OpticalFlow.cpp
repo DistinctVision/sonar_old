@@ -1,4 +1,4 @@
-#include "ImageTools/OpticalFlow.h"
+#include <sonar/ImageTools/OpticalFlow.h>
 #include <cassert>
 
 using namespace std;
@@ -19,7 +19,7 @@ Point2i OpticalFlow::cursorSize() const
 void OpticalFlow::setCursorSize(const Point2i & size)
 {
     m_opticalFlowCalculator.setCursorSize(size);
-    m_maxVelocitySquared = (float)min(size.x, size.y);
+    m_maxVelocitySquared = cast<float>(min(size.x, size.y));
     m_maxVelocitySquared *= m_maxVelocitySquared;
 }
 
@@ -112,7 +112,7 @@ TrackingResult OpticalFlow::tracking2d(Point2f & secondPosition, const Point2f &
 
         m_opticalFlowCalculator.setFirstImage(m_firstPyramid.get(level));
         m_opticalFlowCalculator.setSecondImage(m_secondPyramid.get(level));
-        float scale = (float)(1 << level);
+        float scale = cast<float>(1 << level);
         p = secondPosition / scale;
         prev = p;
         if (m_opticalFlowCalculator.tracking2d(p, firstPosition / scale) != TrackingResult::Fail) {
@@ -154,7 +154,7 @@ void OpticalFlow::tracking2d(vector<TrackingResult> & status,
 
         m_opticalFlowCalculator.setFirstImage(m_firstPyramid.get(level));
         m_opticalFlowCalculator.setSecondImage(m_secondPyramid.get(level));
-        float scale = (float)(1 << level);
+        float scale = cast<float>(1 << level);
         vector<Point2f>::iterator itSecond = secondPoints.begin();
         vector<Point2f>::const_iterator itFirst = firstPoints.cbegin();
         vector<TrackingResult>::iterator itSuccess = status.begin();
@@ -201,7 +201,7 @@ TrackingResult OpticalFlow::tracking2dLK(Point2f & secondPosition, const Point2f
 
         m_opticalFlowCalculator.setFirstImage(m_firstPyramid.get(level));
         m_opticalFlowCalculator.setSecondImage(m_secondPyramid.get(level));
-        float scale = (float)(1 << level);
+        float scale = cast<float>(1 << level);
         p = secondPosition / scale;
         prev = p;
         if (m_opticalFlowCalculator.tracking2dLK(p, firstPosition / scale) != TrackingResult::Fail) {
@@ -243,7 +243,7 @@ void OpticalFlow::tracking2dLK(vector<TrackingResult> & status,
 
         m_opticalFlowCalculator.setFirstImage(m_firstPyramid.get(level));
         m_opticalFlowCalculator.setSecondImage(m_secondPyramid.get(level));
-        float scale = (float)(1 << level);
+        float scale = cast<float>(1 << level);
         vector<Point2f>::iterator itSecond = secondPoints.begin();
         vector<Point2f>::const_iterator itFirst = firstPoints.cbegin();
         vector<TrackingResult>::iterator itSuccess = status.begin();

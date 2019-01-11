@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "CameraTools/PinholeCamera.h"
+#include <sonar/CameraTools/PinholeCamera.h>
 
 #include <cassert>
 #include <cmath>

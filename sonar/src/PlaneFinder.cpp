@@ -4,7 +4,7 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "PlaneFinder.h"
+#include <sonar/PlaneFinder.h>
 
 #include <cassert>
 #include <cmath>
@@ -13,7 +13,7 @@
 
 #include <Eigen/SVD>
 
-#include <General/cast.h>
+#include <sonar/General/cast.h>
 
 using namespace std;
 using namespace std::chrono;

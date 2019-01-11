@@ -1,7 +1,7 @@
-#include "ImageTools/FeatureDetector.h"
+#include <sonar/ImageTools/FeatureDetector.h>
 #include <cassert>
 
-#include "General/cast.h"
+#include <sonar/General/cast.h>
 
 using namespace std;
 

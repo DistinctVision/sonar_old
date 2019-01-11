@@ -7,11 +7,11 @@
 #ifndef SONAR_WLS_H
 #define SONAR_WLS_H
 
+#include <cassert>
+
 #include <Eigen/Core>
 #include <Eigen/QR>
 #include <Eigen/Eigen>
-
-#include <cassert>
 
 namespace sonar {
 

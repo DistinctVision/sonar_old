@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <Eigen/Core>
+
 #include <opengv/types.hpp>
 
 namespace sonar {

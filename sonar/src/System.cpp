@@ -4,18 +4,18 @@
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
-#include "System.h"
-#include "SourceFrame.h"
-#include "AbstractInitTracker.h"
-#include "CPU_InitTracker.h"
-#include "Initializator.h"
-#include "MapFrame.h"
+#include <sonar/System.h>
+#include <sonar/SourceFrame.h>
+#include <sonar/AbstractInitTracker.h>
+#include <sonar/CPU_InitTracker.h>
+#include <sonar/Initializator.h>
+#include <sonar/MapFrame.h>
+
+#include <exception>
 
 #include <Eigen/Eigen>
 
-#include <General/cast.h>
-
-#include <exception>
+#include <sonar/General/cast.h>
 
 using namespace std;
 using namespace Eigen;
