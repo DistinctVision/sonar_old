@@ -13,7 +13,7 @@ FeatureDetector::FeatureDetector()
     m_detectionThreshold = 80.0f;
     m_minLevelForFeature = 1;
     m_maxLevelForFeature = -1;
-    setGridSize(Point2i(25, 25));
+    setGridSize(Point2i(30, 30));
     m_maxCountFeatures = 1500;
     m_borderSize.set(12, 12);
 }

@@ -1,6 +1,6 @@
 /**
 * This file is part of sonar library
-* Copyright (C) 2018 Vlasov Aleksey ijonsilent53@gmail.com
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
@@ -65,20 +65,20 @@ void AbstractInitTracker::reset()
 
 shared_ptr<const SourceFrame> AbstractInitTracker::capturedFrame(int indexStep) const
 {
-    assert((m_indexStep >= 0) && (m_indexStep <= 2));
+    assert((indexStep >= 0) && (indexStep <= 2));
     return m_capturedFrames[cast<size_t>(indexStep)];
 }
 
 vector<Point2f> AbstractInitTracker::capturedFramePoints(int indexStep) const
 {
-    assert((m_indexStep >= 0) && (m_indexStep <= 2));
+    assert((indexStep >= 0) && (indexStep <= 2));
     return m_capturedFramePoints[cast<size_t>(indexStep)];
 }
 
 void AbstractInitTracker::_capture(const SourceFrame & sourceFrame)
 {
-    assert(m_indexStep < 2);
-    m_capturedFrames[m_indexStep] = sourceFrame.sourceCopy();
+    assert(m_indexStep <= 2);
+    m_capturedFrames[m_indexStep++] = sourceFrame.sourceCopy();
 }
 
 } // namespace sonar

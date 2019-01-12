@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "test_synthetic_initialization.h"
+#include "test_demo.h"
 
 void runTests()
 {
@@ -32,11 +33,17 @@ void runTests()
     assert(nSuccess == nTests);
 }
 
+void runDemo()
+{
+    assert(test_demo());
+}
+
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 
-    runTests();
+    runDemo();
+    //runTests();
 
     //return app.exec();
     return 0;

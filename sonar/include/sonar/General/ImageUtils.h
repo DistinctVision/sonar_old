@@ -1,6 +1,6 @@
 /**
 * This file is part of sonar library
-* Copyright (C) 2018 Vlasov Aleksey ijonsilent53@gmail.com
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 

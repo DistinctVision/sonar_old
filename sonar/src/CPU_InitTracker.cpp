@@ -1,6 +1,6 @@
 /**
 * This file is part of sonar library
-* Copyright (C) 2018 Vlasov Aleksey ijonsilent53@gmail.com
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
@@ -42,20 +42,19 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
 
     assert(sourceFrame.sourceType() == SourceFrame::SourceType::Image);
     ConstImage<uchar> image = sourceFrame.image();
+    ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
     switch (indexStep()) {
     case 0: {
-        ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
         vector<FeatureDetector::FeatureCorner> corners = m_featureDetector.detectCorners(imagePyramid);
         vector<Point2f> & features = m_capturedFramePoints[0];
         features.resize(corners.size());
         for (size_t i = 0; i < corners.size(); ++i)
             features[i] = cast<float>(corners[i].pos);
         m_capturedFramePoints[1] = features;
-        m_opticalFlow.setFirstPyramid(imagePyramid);
+        m_opticalFlow.setFirstPyramid(imagePyramid.copy());
         _capture(sourceFrame);
-    } break;
+    } return false;
     case 1: {
-        ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
         m_opticalFlow.setSecondPyramid(imagePyramid);
         vector<TrackingResult> status;
         m_opticalFlow.tracking2dLK(status, m_capturedFramePoints[1], m_capturedFramePoints[0]);
@@ -72,7 +71,6 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
             m_capturedFramePoints[j].resize(cSize);
     } break;
     case 2: {
-        ImagePyramid_u imagePyramid(image, m_opticalFlow.numberLevels());
         m_opticalFlow.setSecondPyramid(imagePyramid);
         vector<TrackingResult> status;
         m_opticalFlow.tracking2dLK(status, m_capturedFramePoints[2], m_capturedFramePoints[0]);
@@ -105,6 +103,7 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
             if (indexStep() >= 3)
                 return true;
             m_capturedFramePoints[indexStep()] = m_capturedFramePoints[indexStep() - 1];
+            m_opticalFlow.setFirstPyramid(imagePyramid.copy());
         }
     }
     return false;

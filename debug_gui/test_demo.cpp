@@ -1,6 +1,10 @@
 #include "test_demo.h"
+
 #include <memory>
 #include <iostream>
+#include <utility>
+
+#include <Eigen/Core>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -16,14 +20,59 @@
 
 using namespace sonar;
 using namespace std;
+using namespace Eigen;
+
+void draw_cube(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame)
+{
+    static const Vector3d vertices[8] = {
+        Vector3d(-0.5, 0.0, -0.5),
+        Vector3d(0.5, 0.0, -0.5),
+        Vector3d(0.5, 0.0, 0.5),
+        Vector3d(-0.5, 0.0, 0.5),
+        Vector3d(-0.5, 1.0, -0.5),
+        Vector3d(0.5, 1.0, -0.5),
+        Vector3d(0.5, 1.0, 0.5),
+        Vector3d(-0.5, 1.0, 0.5),
+    };
+    static const pair<int, int> edges[] = {
+        make_pair(0, 1),
+        make_pair(1, 2),
+        make_pair(2, 3),
+        make_pair(3, 0),
+        make_pair(4, 5),
+        make_pair(5, 6),
+        make_pair(6, 7),
+        make_pair(7, 4),
+        make_pair(0, 4),
+        make_pair(1, 5),
+        make_pair(2, 6),
+        make_pair(3, 7),
+    };
+
+    shared_ptr<const AbstractCamera> camera = mapFrame->camera();
+    Matrix3d R = mapFrame->rotation();
+    Vector3d t = mapFrame->translation();
+    for (auto it_e = begin(edges); it_e != end(edges); ++it_e)
+    {
+        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->first] + t));
+        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->second] + t));
+        cv::line(cvFrame, p1, p2, cv::Scalar(0, 255, 0), 1);
+    }
+}
 
 bool test_demo()
 {
-    cv::VideoCapture capture(0);
+    cv::VideoCapture capture;
 
-    if (capture.isOpened())
+    if (!capture.open(1))
     {
         cerr << "camera not found" << endl;
+        return false;
+    }
+
+    if (!capture.isOpened())
+    {
+        cerr << "camera not open" << endl;
         return false;
     }
 
@@ -36,27 +85,31 @@ bool test_demo()
     Image<Rgb_u> frame_rgb = image_utils::convertCvMat_rgb_u(cvFrameImage);
     Image<uchar> frame_bw = image_utils::convertToGrayscale(frame_rgb);
 
-    double focalLength = 1.2;
-    auto camera = make_shared<PinholeCamera>(Point2d(frame_bw.width() * focalLength, frame_bw.height() * focalLength),
+    double pixelFocalLength = frame_bw.width() * 1.2;
+    auto camera = make_shared<PinholeCamera>(Point2d(pixelFocalLength, - pixelFocalLength),
                                              cast<double>(frame_bw.size()) * 0.5,
                                              frame_bw.size());
     System system;
     system.setCamera(camera);
 
-    bool startedFlag = false;
+    bool startFlag = false;
+    bool stopFlag = false;
     while (capture.isOpened())
     {
-        if (!capture.read(cvFrameImage))
+        if (!stopFlag)
         {
-            break;
+            if (!capture.read(cvFrameImage))
+            {
+                break;
+            }
         }
-        if (startedFlag)
+        if (startFlag)
         {
             frame_rgb = image_utils::convertCvMat_rgb_u(cvFrameImage);
             image_utils::convertToGrayscale(frame_bw, frame_rgb);
 
             SourceFrame sourceFrame(frame_bw);
-            system.process(sourceFrame);
+            auto mapFrame = system.process(sourceFrame);
 
             if (system.trackingState() == TrackingState::Initializing)
             {
@@ -74,19 +127,35 @@ bool test_demo()
                     }
                 }
             }
+            else if (system.trackingState() == TrackingState::Tracking)
+            {
+                if (!stopFlag)
+                {
+                    stopFlag = true;
+                    draw_cube(cvFrameImage, mapFrame);
+                }
+            }
         }
 
         cv::imshow("frame", cvFrameImage);
 
         int key = cv::waitKey(33);
         if (key == 27)
-            break;
-        if (!startedFlag)
         {
-            if (key == 32)
+            break;
+        }
+        else if (key == 32)
+        {
+            if (!startFlag)
             {
-                startedFlag = true;
+                startFlag = true;
                 system.start();
+            }
+            else if (stopFlag)
+            {
+                stopFlag = false;
+                startFlag = false;
+                system.reset();
             }
         }
     }

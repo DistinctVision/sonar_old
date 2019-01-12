@@ -1,6 +1,6 @@
 /**
 * This file is part of sonar library
-* Copyright (C) 2018 Vlasov Aleksey ijonsilent53@gmail.com
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
@@ -119,6 +119,7 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
                 m_initTracker->reset();
                 break;
             }
+            m_trackingState = TrackingState::Tracking;
             Matrix3d R = initInfo.thirdTransfrom.block<3, 3>(0, 0);
             Vector3d t = initInfo.thirdTransfrom.col(3);
             return make_shared<MapFrame>(m_initTracker->capturedFrame(2),

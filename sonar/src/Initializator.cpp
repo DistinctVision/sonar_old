@@ -1,6 +1,6 @@
 /**
 * This file is part of sonar library
-* Copyright (C) 2018 Vlasov Aleksey ijonsilent53@gmail.com
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
 
@@ -32,7 +32,7 @@ namespace sonar {
 
 Initializator::Initializator():
     m_minNumberPoints(20),
-    m_maxPixelError(2.0f),
+    m_maxPixelError(3.0f),
     m_numberRansacEssentialsIterations(300),
     m_numberRansacTransformsIterations(30)
 {
