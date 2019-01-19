@@ -32,7 +32,7 @@ namespace sonar {
 
 Initializator::Initializator():
     m_minNumberPoints(20),
-    m_maxPixelError(3.0f),
+    m_maxPixelError(4.0f),
     m_numberRansacEssentialsIterations(300),
     m_numberRansacTransformsIterations(30)
 {
@@ -148,9 +148,30 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
             Vector3d thirdWorldPosition = - thirdTransform.block<3, 3>(0, 0).inverse() * thirdTransform.col(3);
 
             transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdWorldPosition);
+            Vector3d planePosition = planeTransformation.col(3);
+            Vector3d planeNormal = planeTransformation.col(2);
+            double t;
+            if (!_pickPlane(t, planeNormal, planePosition, Vector3d(0.0, 0.0, 1.0), Vector3d(0.0, 0.0, 0.0)))
+            {
+                return make_tuple(false, m_lastInitializationInfo);
+            }
+            if (cast<float>(t) < numeric_limits<float>::epsilon())
+            {
+                return make_tuple(false, m_lastInitializationInfo);
+            }
+
+            double scale = 1.0 / t;
+
             Matrix3d planeRotation = planeTransformation.block<3, 3>(0, 0);
             Matrix3d invPlaneRotation = planeRotation.inverse();
-            Vector3d planePosition = planeTransformation.col(3);
+
+            planePosition *= scale;
+            firstTransform.col(3) *= scale;
+            secondTransform.col(3) *= scale;
+            thirdTransform.col(3) *= scale;
+
+            for (point_t & point : points)
+                point = (invPlaneRotation * (point * scale - planePosition)).eval();
 
             firstTransform.col(3) = planePosition;
             firstTransform.block<3, 3>(0, 0) = planeRotation;
@@ -158,9 +179,6 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
             secondTransform.block<3, 3>(0, 0) *= planeRotation;
             thirdTransform.col(3) += thirdTransform.block<3, 3>(0, 0) * planePosition;
             thirdTransform.block<3, 3>(0, 0) *= planeRotation;
-
-            for (point_t & point : points)
-                point = (invPlaneRotation * (point - planePosition)).eval();
         }
 
         m_lastInitializationInfo.points = points;
@@ -490,6 +508,17 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
         secondTransformations.push_back(secondTransform); // array associated with thirdTransforms
         ++it_T;
     }
+}
+
+bool Initializator::_pickPlane(double & t,
+                               const Vector3d & planeNormal, const Vector3d & planePoint,
+                               const Vector3d & rayDir, const Vector3d & rayPoint) const
+{
+    t = rayDir.dot(planeNormal);
+    if (cast<float>(std::fabs(t)) < std::numeric_limits<float>::epsilon())
+        return false;
+    t = - ((rayPoint - planePoint).dot(planeNormal)) / t;
+    return true;
 }
 
 } // namespace sonar

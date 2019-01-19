@@ -87,6 +87,10 @@ private:
                        const opengv::bearingVectors_t & firstDirs,
                        const opengv::bearingVectors_t & secondDirs,
                        const opengv::bearingVectors_t & thirdDirs) const;
+
+    bool _pickPlane(double & t,
+                    const Eigen::Vector3d & planeNormal, const Eigen::Vector3d & planePoint,
+                    const Eigen::Vector3d & rayDir, const Eigen::Vector3d & rayPoint) const;
 };
 
 } // namespace sonar

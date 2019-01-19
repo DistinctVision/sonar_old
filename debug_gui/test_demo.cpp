@@ -6,6 +6,8 @@
 
 #include <Eigen/Core>
 
+#include <opengv/types.hpp>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -16,13 +18,15 @@
 #include <sonar/MapFrame.h>
 #include <sonar/CameraTools/PinholeCamera.h>
 #include <sonar/AbstractInitTracker.h>
+#include <sonar/Initializator.h>
 #include <sonar/System.h>
 
 using namespace sonar;
 using namespace std;
 using namespace Eigen;
+using namespace opengv;
 
-void draw_cube(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame)
+void draw_cube(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame, double scale = 0.5)
 {
     static const Vector3d vertices[8] = {
         Vector3d(-0.5, 0.0, -0.5),
@@ -54,9 +58,22 @@ void draw_cube(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame)
     Vector3d t = mapFrame->translation();
     for (auto it_e = begin(edges); it_e != end(edges); ++it_e)
     {
-        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->first] + t));
-        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->second] + t));
+        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->first] * scale + t));
+        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->second] * scale + t));
         cv::line(cvFrame, p1, p2, cv::Scalar(0, 255, 0), 1);
+    }
+}
+
+void draw_points(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame,
+                 const points_t & points)
+{
+    shared_ptr<const AbstractCamera> camera = mapFrame->camera();
+    Matrix3d R = mapFrame->rotation();
+    Vector3d t = mapFrame->translation();
+    for (auto it = points.cbegin(); it != points.cend(); ++it)
+    {
+        cv::Point2i p = cv_cast<int>(camera->toImagePoint(R * (*it) + t));
+        cv::circle(cvFrame, p, 3, cv::Scalar(255, 0, 0), 2);
     }
 }
 
@@ -64,7 +81,7 @@ bool test_demo()
 {
     cv::VideoCapture capture;
 
-    if (!capture.open(1))
+    if (!capture.open(0))
     {
         cerr << "camera not found" << endl;
         return false;
@@ -85,7 +102,7 @@ bool test_demo()
     Image<Rgb_u> frame_rgb = image_utils::convertCvMat_rgb_u(cvFrameImage);
     Image<uchar> frame_bw = image_utils::convertToGrayscale(frame_rgb);
 
-    double pixelFocalLength = frame_bw.width() * 1.2;
+    double pixelFocalLength = frame_bw.width() * 0.5;
     auto camera = make_shared<PinholeCamera>(Point2d(pixelFocalLength, - pixelFocalLength),
                                              cast<double>(frame_bw.size()) * 0.5,
                                              frame_bw.size());
@@ -132,6 +149,7 @@ bool test_demo()
                 if (!stopFlag)
                 {
                     stopFlag = true;
+                    draw_points(cvFrameImage, mapFrame, system.initializator()->lastInitializationInfo().points);
                     draw_cube(cvFrameImage, mapFrame);
                 }
             }

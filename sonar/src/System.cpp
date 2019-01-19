@@ -68,6 +68,16 @@ shared_ptr<AbstractInitTracker> System::initTracker()
     return m_initTracker;
 }
 
+shared_ptr<const Initializator> System::initializator() const
+{
+    return m_initializator;
+}
+
+shared_ptr<Initializator> System::initializator()
+{
+    return m_initializator;
+}
+
 shared_ptr<const AbstractCamera> System::camera() const
 {
     return m_camera;

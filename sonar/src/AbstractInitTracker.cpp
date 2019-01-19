@@ -15,7 +15,7 @@ using namespace std;
 namespace sonar {
 
 AbstractInitTracker::AbstractInitTracker():
-    m_medianDistanceStep(20.0f),
+    m_medianDistanceStep(15.0f),
     m_minNumberFeatures(30),
     m_indexStep(0)
 {

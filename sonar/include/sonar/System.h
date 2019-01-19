@@ -52,6 +52,9 @@ public:
     std::shared_ptr<const AbstractInitTracker> initTracker() const;
     std::shared_ptr<AbstractInitTracker> initTracker();
 
+    std::shared_ptr<const Initializator> initializator() const;
+    std::shared_ptr<Initializator> initializator();
+
     std::shared_ptr<const AbstractCamera> camera() const;
     void setCamera(const std::shared_ptr<const AbstractCamera> & camera);
 
