@@ -14,6 +14,7 @@
 #include <sonar/General/cast.h>
 #include <sonar/General/Image.h>
 #include <sonar/General/ImageUtils.h>
+#include <sonar/types.h>
 #include <sonar/SourceFrame.h>
 #include <sonar/MapFrame.h>
 #include <sonar/CameraTools/PinholeCamera.h>
@@ -24,7 +25,6 @@
 using namespace sonar;
 using namespace std;
 using namespace Eigen;
-using namespace opengv;
 
 void draw_cube(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame, double scale = 0.5)
 {
@@ -81,7 +81,7 @@ bool test_demo()
 {
     cv::VideoCapture capture;
 
-    if (!capture.open(0))
+    if (!capture.open(1))
     {
         cerr << "camera not found" << endl;
         return false;

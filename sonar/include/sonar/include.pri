@@ -11,4 +11,7 @@ HEADERS += \
     $$PWD/Initializator.h \
     $$PWD/PlaneFinder.h \
     $$PWD/MapFrame.h \
-    $$PWD/common.h
+    $$PWD/common.h \
+    $$PWD/types.h \
+    $$PWD/AbstractInitializator.h \
+    $$PWD/HomographyInitializator.h

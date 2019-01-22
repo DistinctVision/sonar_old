@@ -7,12 +7,12 @@
 #ifndef SONAR_PLANEFINDER_H
 #define SONAR_PLANEFINDER_H
 
+#include "types.h"
+
 #include <tuple>
 #include <vector>
 
 #include <Eigen/Core>
-
-#include <opengv/types.hpp>
 
 namespace sonar {
 
@@ -35,16 +35,16 @@ public:
     int numberRansacIterations() const;
     void setNumberRansacIterations(int numberRansacIterations);
 
-    Plane find(const opengv::points_t & points);
+    Plane find(const points_t & points);
 
-    opengv::transformation_t getPlaneTransformation(const Plane & plane,
-                                                    const opengv::point_t & viewPoint) const;
+    transformation_t getPlaneTransformation(const Plane & plane,
+                                            const point_t & viewPoint) const;
 
 private:
     double m_distanceThreshold;
     int m_numberRansacIterations;
 
-    Plane _computePlane(const opengv::points_t & points,
+    Plane _computePlane(const points_t & points,
                         const std::vector<int> & indices) const;
 };
 

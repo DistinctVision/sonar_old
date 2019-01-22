@@ -9,4 +9,6 @@ SOURCES += \
     $$PWD/MapFrame.cpp \
     $$PWD/PlaneFinder.cpp \
     $$PWD/SourceFrame.cpp \
-    $$PWD/System.cpp
+    $$PWD/System.cpp \
+    $$PWD/AbstractInitializator.cpp \
+    $$PWD/HomographyInitializator.cpp

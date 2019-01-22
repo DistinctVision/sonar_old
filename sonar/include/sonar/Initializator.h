@@ -7,42 +7,20 @@
 #ifndef SONAR_INITIALIZATOR_H
 #define SONAR_INITIALIZATOR_H
 
-#include <memory>
-#include <utility>
-#include <vector>
-#include <tuple>
+#if defined(OPENGV_LIB)
 
-#include <Eigen/Core>
-
-#include <opengv/types.hpp>
-
-#include <sonar/General/Point2.h>
+#include "AbstractInitializator.h"
 
 namespace sonar {
 
 // forward declaration
-class AbstractCamera;
 class PlaneFinder;
 
-class Initializator
+class Initializator:
+        public AbstractInitializator
 {
 public:
-    struct Info
-    {
-        opengv::transformation_t firstTransfrom = opengv::transformation_t::Identity();
-        opengv::transformation_t secondTransfrom = opengv::transformation_t::Identity();
-        opengv::transformation_t thirdTransfrom = opengv::transformation_t::Identity();
-
-        opengv::points_t points;
-    };
-
     Initializator();
-
-    int minNumberPoints() const;
-    void setMinNumberPoints(int minNumberPoints);
-
-    float maxPixelError() const;
-    void setMaxPixelError(float maxPixelError);
 
     int numberRansacEssentialsIterations() const;
     void setNumberRansacEssentialsIterations(int numberRansacIterations);
@@ -53,40 +31,34 @@ public:
     std::shared_ptr<const PlaneFinder> planeFinder() const;
     std::shared_ptr<PlaneFinder> planeFinder();
 
-    Info lastInitializationInfo() const;
-
     std::tuple<bool, Info> compute(const std::shared_ptr<const AbstractCamera> & firstCamera,
                                    const std::vector<Point2d> & firstFrame,
                                    const std::shared_ptr<const AbstractCamera> & secondCamera,
                                    const std::vector<Point2d> & secondFrame,
                                    const std::shared_ptr<const AbstractCamera> & thirdCamera,
                                    const std::vector<Point2d> & thirdFrame,
-                                   bool alignByPlaneFlag = true);
+                                   bool alignByPlaneFlag = true) override;
 
 private:
-    int m_minNumberPoints;
-    float m_maxPixelError;
     int m_numberRansacEssentialsIterations;
     int m_numberRansacTransformsIterations;
 
-    Info m_lastInitializationInfo;
-
     std::shared_ptr<PlaneFinder> m_planeFinder;
 
-    std::tuple<opengv::transformation_t, opengv::transformation_t, std::vector<int>, opengv::points_t>
-    _compute(const opengv::bearingVectors_t & firstDirs,
-             const opengv::bearingVectors_t & secondDirs,
-             const opengv::bearingVectors_t & thirdDirs,
+    std::tuple<transformation_t, transformation_t, std::vector<int>, points_t>
+    _compute(const bearingVectors_t & firstDirs,
+             const bearingVectors_t & secondDirs,
+             const bearingVectors_t & thirdDirs,
              double firstThreshold, double secondThreshold, double thirdThreshold) const;
 
-    opengv::transformations_t _convert(const opengv::essentials_t & essentials) const;
+    opengv::transformations_t _convert(const essentials_t & essentials) const;
 
-    void _filterResult(opengv::transformations_t & secondTransformations,
-                       opengv::transformations_t & thirdTransformations,
+    void _filterResult(transformations_t & secondTransformations,
+                       transformations_t & thirdTransformations,
                        const std::vector<int> & samples,
-                       const opengv::bearingVectors_t & firstDirs,
-                       const opengv::bearingVectors_t & secondDirs,
-                       const opengv::bearingVectors_t & thirdDirs) const;
+                       const bearingVectors_t & firstDirs,
+                       const bearingVectors_t & secondDirs,
+                       const bearingVectors_t & thirdDirs) const;
 
     bool _pickPlane(double & t,
                     const Eigen::Vector3d & planeNormal, const Eigen::Vector3d & planePoint,
@@ -94,5 +66,7 @@ private:
 };
 
 } // namespace sonar
+
+#endif
 
 #endif // SONAR_INITIALIZATOR_H

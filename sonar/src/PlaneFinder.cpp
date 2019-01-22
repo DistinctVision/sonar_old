@@ -18,7 +18,6 @@
 using namespace std;
 using namespace std::chrono;
 using namespace Eigen;
-using namespace opengv;
 
 namespace sonar {
 
@@ -129,7 +128,7 @@ transformation_t PlaneFinder::getPlaneTransformation(const PlaneFinder::Plane & 
     Vector3d delta = viewPoint - plane.point;
     Vector3d planeAxisZ = plane.normal;
 
-    if (planeAxisZ.dot(delta) > 0.0)
+    if (planeAxisZ.dot(delta) < 0.0)
     {
         planeAxisZ = - planeAxisZ;
     }

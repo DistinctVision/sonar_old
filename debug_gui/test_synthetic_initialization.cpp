@@ -1,5 +1,7 @@
 #include "test_synthetic_initialization.h"
 
+#include <sonar/AbstractInitializator.h>
+
 #include <opengv/types.hpp>
 
 #include <sonar/CameraTools/PinholeCamera.h>
@@ -57,7 +59,7 @@ bool compare(const Matrix3d & a, const Matrix3d & b)
     return true;
 }
 
-bool test_synthetic_initialization()
+bool test_synthetic_initialization(AbstractInitializator * initializator)
 {
     shared_ptr<AbstractCamera> camera(new PinholeCamera(Point2d(100.0, 100.0),
                                                         Point2d(50.0, 50.0),
@@ -113,11 +115,9 @@ bool test_synthetic_initialization()
 
     Initializator::Info info;
     bool successFlag;
-
-    Initializator initializator;
-    tie(successFlag, info) = initializator.compute(camera, first_image_points,
-                                                   camera, second_image_points,
-                                                   camera, third_image_points, false);
+    tie(successFlag, info) = initializator->compute(camera, first_image_points,
+                                                    camera, second_image_points,
+                                                    camera, third_image_points, false);
     if (!successFlag)
         return false;
 

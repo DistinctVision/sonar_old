@@ -3,8 +3,9 @@
 * Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
 **/
-
 #include <sonar/Initializator.h>
+
+#if defined(OPENGV_LIB)
 
 #include <cassert>
 #include <cmath>
@@ -25,38 +26,15 @@
 
 using namespace std;
 using namespace std::chrono;
-using namespace opengv;
 using namespace Eigen;
 
 namespace sonar {
 
 Initializator::Initializator():
-    m_minNumberPoints(20),
-    m_maxPixelError(4.0f),
     m_numberRansacEssentialsIterations(300),
     m_numberRansacTransformsIterations(30)
 {
     m_planeFinder = make_shared<PlaneFinder>();
-}
-
-int Initializator::minNumberPoints() const
-{
-    return m_minNumberPoints;
-}
-
-void Initializator::setMinNumberPoints(int minNumberPoints)
-{
-    m_minNumberPoints = minNumberPoints;
-}
-
-float Initializator::maxPixelError() const
-{
-    return m_maxPixelError;
-}
-
-void Initializator::setMaxPixelError(float maxPixelError)
-{
-    m_maxPixelError = maxPixelError;
 }
 
 int Initializator::numberRansacEssentialsIterations() const
@@ -89,11 +67,6 @@ shared_ptr<PlaneFinder> Initializator::planeFinder()
     return m_planeFinder;
 }
 
-Initializator::Info Initializator::lastInitializationInfo() const
-{
-    return m_lastInitializationInfo;
-}
-
 tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<const AbstractCamera> & firstCamera,
                                                         const vector<Point2d> & firstFrame,
                                                         const std::shared_ptr<const AbstractCamera> & secondCamera,
@@ -118,25 +91,24 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
         thirdDirs[i] = thirdCamera->toLocalDir(thirdFrame[i]).normalized();
     }
 
-    double firstThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
+    double firstThreshold = (1.0 - cos(atan(cast<double>(maxPixelError()) /
                                        cast<double>(max(firstCamera->imageSize().x,
                                                         firstCamera->imageSize().y)))));
-    double secondThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
+    double secondThreshold = (1.0 - cos(atan(cast<double>(maxPixelError()) /
                                         cast<double>(max(secondCamera->imageSize().x,
                                                          secondCamera->imageSize().y)))));
-    double thirdThreshold = (1.0 - cos(atan(cast<double>(m_maxPixelError) /
+    double thirdThreshold = (1.0 - cos(atan(cast<double>(maxPixelError()) /
                                        cast<double>(max(thirdCamera->imageSize().x,
                                                         thirdCamera->imageSize().y)))));
 
     vector<int> inliers;
     points_t points;
-    // get result in opengv style
     m_lastInitializationInfo.firstTransfrom = transformation_t::Identity();
     tie(m_lastInitializationInfo.secondTransfrom, m_lastInitializationInfo.thirdTransfrom,
         inliers, points) = _compute(firstDirs, secondDirs, thirdDirs,
                                     firstThreshold, secondThreshold, thirdThreshold);
 
-    if (cast<int>(inliers.size()) >= m_minNumberPoints)
+    if (cast<int>(inliers.size()) >= minNumberPoints())
     {
         PlaneFinder::Plane plane = m_planeFinder->find(points);
 
@@ -219,14 +191,12 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     points.reserve(numberPoints);
     inliers.reserve(numberPoints);
 
-    double best_error = numeric_limits<double>::max();
+    double best_score = numeric_limits<double>::max();
     points_t best_points;
     vector<int> best_inliers;
     essential_t best_essentialMatrix;
 
-    relative_pose::CentralRelativeAdapter adapter(firstDirs, thirdDirs);
-
-    double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
+    opengv::relative_pose::CentralRelativeAdapter adapter(firstDirs, thirdDirs);
 
     for (int iteration = 0; iteration < m_numberRansacEssentialsIterations; ++iteration)
     {
@@ -237,11 +207,11 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
         }
         copy(shuffled_indices.begin(), shuffled_indices.begin() + 5, samples.begin());
 
-        essentials = relative_pose::fivept_nister(adapter, samples);
+        essentials = opengv::relative_pose::fivept_nister(adapter, samples);
 
         for (auto itE = essentials.cbegin(); itE != essentials.cend(); ++itE)
         {
-            double error = 0.0;
+            double score = 0.0;
             for (size_t i = 0; i < numberPoints; ++i)
             {
                 const bearingVector_t & firstDir = firstDirs[i];
@@ -249,12 +219,12 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
                 double e = std::fabs(thirdDir.transpose() * itE->transpose() * firstDir);
 
-                error += std::min(e, firstThreshold) + std::min(e, thirdThreshold);
+                score += std::min(e, firstThreshold) + std::min(e, thirdThreshold);
             }
 
-            if (error < best_error)
+            if (score < best_score)
             {
-                best_error = error;
+                best_score = score;
                 best_essentialMatrix = (*itE);
                 inliers = samples;
             }
@@ -275,9 +245,10 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
         shuffled_indices.resize(shuffled_indices.size() - 1);
     }
     samples.resize(6);
-    best_error = numeric_limits<double>::max();
+    best_score = numeric_limits<double>::max();
     JacobiSVD<Matrix<double, 4, 4>> SVD;
     Matrix<double, 4, 4> M;
+    double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
     for (int iteration = 0; iteration < 30; )
     {
         swap(shuffled_indices[0],
@@ -291,12 +262,12 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
 
         for (size_t i = 0; i < secondTransforms.size(); ++i)
         {
-            const opengv::transformation_t & secondTransform = secondTransforms[i];
-            const opengv::transformation_t & thirdTransform = thirdTransforms[i];
+            const transformation_t & secondTransform = secondTransforms[i];
+            const transformation_t & thirdTransform = thirdTransforms[i];
 
             points.resize(0);
             inliers.resize(0);
-            double error = 0.0;
+            double score = 0.0;
             for (size_t j = 0; j < numberPoints; ++j)
             {
                 const bearingVector_t & firstDir = firstDirs[j];
@@ -317,42 +288,42 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
                 Vector4d X = SVD.matrixV().col(3);
                 if (std::fabs(X(3)) < numeric_limits<double>::epsilon())
                 {
-                    error += sumThresholds;
+                    score += sumThresholds;
                     continue;
                 }
                 X /= X(3);
 
-                double firstError = 1.0 - firstDir.dot(X.segment<3>(0).normalized());
-                if (firstError > firstThreshold)
+                double firstScore = 1.0 - firstDir.dot(X.segment<3>(0).normalized());
+                if (firstScore > firstThreshold)
                 {
-                    error += sumThresholds;
+                    score += sumThresholds;
                     continue;
                 }
 
                 Vector3d secondPoint = secondTransform * X;
-                double secondError = 1.0 - secondDir.dot(secondPoint.normalized());
-                if (secondError > secondThreshold)
+                double secondScore = 1.0 - secondDir.dot(secondPoint.normalized());
+                if (secondScore > secondThreshold)
                 {
-                    error += sumThresholds;
+                    score += sumThresholds;
                     continue;
                 }
 
                 Vector3d thirdPoint = thirdTransform * X;
-                double thirdError = 1.0 - thirdDir.dot(thirdPoint.normalized());
-                if (thirdError > thirdThreshold)
+                double thirdScore = 1.0 - thirdDir.dot(thirdPoint.normalized());
+                if (thirdScore > thirdThreshold)
                 {
-                    error += sumThresholds;
+                    score += sumThresholds;
                     continue;
                 }
 
-                error += firstError + secondError + thirdError;
+                score += firstScore + secondScore + thirdScore;
                 inliers.push_back(cast<int>(j));
                 points.push_back(X.segment<3>(0));
             }
 
-            if (error < best_error)
+            if (score < best_score)
             {
-                best_error = error;
+                best_score = score;
                 best_secondTransformation = secondTransform;
                 best_thirdTransformation = thirdTransform;
                 best_points = move(points);
@@ -376,8 +347,8 @@ transformations_t Initializator::_convert(const essentials_t & essentials) const
                                              0.0,  0.0, 1.0).finished();
 
     JacobiSVD<Matrix3d> SVD;
-    opengv::transformation_t transformation;
-    opengv::transformations_t transformations;
+    transformation_t transformation;
+    transformations_t transformations;
     for (auto it_E = essentials.cbegin(); it_E != essentials.cend(); ++it_E)
     {
         SVD.compute((*it_E), Eigen::ComputeFullV | Eigen::ComputeFullU);
@@ -437,7 +408,7 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
     Matrix4d M;
     secondTransformations.clear();
     secondTransformations.reserve(thirdTransformations.size());
-    opengv::points_t samples_points(6);
+    points_t samples_points(6);
     for (auto it_T = thirdTransformations.cbegin(); it_T != thirdTransformations.cend(); )
     {
         bool successFLag = true;
@@ -482,8 +453,8 @@ void Initializator::_filterResult(transformations_t & secondTransformations,
             continue;
         }
 
-        absolute_pose::CentralAbsoluteAdapter adapter(adapterSecondDirs, samples_points);
-        transformation_t inv_secondTransform = absolute_pose::epnp(adapter);
+        opengv::absolute_pose::CentralAbsoluteAdapter adapter(adapterSecondDirs, samples_points);
+        transformation_t inv_secondTransform = opengv::absolute_pose::epnp(adapter);
         transformation_t secondTransform;
         secondTransform.block<3, 3>(0, 0) = inv_secondTransform.block<3, 3>(0, 0).transpose();
         secondTransform.col(3) = - secondTransform.block<3, 3>(0, 0) * inv_secondTransform.col(3);
@@ -522,3 +493,5 @@ bool Initializator::_pickPlane(double & t,
 }
 
 } // namespace sonar
+
+#endif
