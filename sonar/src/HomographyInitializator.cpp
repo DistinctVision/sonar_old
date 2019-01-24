@@ -221,13 +221,15 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
         double score = 0.0;
         for (int index : shuffled_indices)
         {
-            double e_b = 1.0 - secondDirs[cast<size_t>(index)].dot((H_b * firstDirs[cast<size_t>(index)]).normalized());
+            double e_b = 1.0 - std::fabs(secondDirs[cast<size_t>(index)].dot(
+                        (H_b * firstDirs[cast<size_t>(index)]).normalized()));
             if (e_b > secondThreshold)
             {
                 score += secondThreshold + thirdThreshold;
                 continue;
             }
-            double e_c = 1.0 - thirdDirs[cast<size_t>(index)].dot((H_c * firstDirs[cast<size_t>(index)]).normalized());
+            double e_c = 1.0 - std::fabs(thirdDirs[cast<size_t>(index)].dot(
+                        (H_c * firstDirs[cast<size_t>(index)]).normalized()));
             if (e_c > thirdThreshold)
             {
                 score += secondThreshold + thirdThreshold;
@@ -258,7 +260,7 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
                           planeNormal, planePoint);
     }
 
-    for (size_t i = 0; i < 8; )
+    for (size_t i = 0; i < decompositions_b.size(); )
     {
         const _Decomposition & decompisition_b = decompositions_b[i];
         const _Decomposition & decompisition_c = decompositions_c[i];
@@ -280,7 +282,7 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
 
     _Decomposition best_decomposition_b;
     _Decomposition best_decomposition_c;
-    best_score = -1.0;
+    best_score = numeric_limits<double>::max();
     double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
     for (size_t i = 0; i < decompositions_b.size(); ++i)
     {
@@ -292,22 +294,22 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
         double score = 0.0;
         for (size_t j = 0; j < points.size(); ++j)
         {
-            double f_e = firstDirs[j].dot(points[j].normalized());
-            if (f_e < firstThreshold)
+            double f_e = 1.0 - firstDirs[j].dot(points[j].normalized());
+            if (f_e > firstThreshold)
             {
                 score += sumThresholds;
                 continue;
             }
-            double s_e = secondDirs[j].dot((decompisition_b.R * points[j] +
-                                            decompisition_b.t).normalized());
-            if (s_e < secondThreshold)
+            double s_e = 1.0 - secondDirs[j].dot((decompisition_b.R * points[j] +
+                                                  decompisition_b.t).normalized());
+            if (s_e > secondThreshold)
             {
                 score += sumThresholds;
                 continue;
             }
-            double t_e = thirdDirs[j].dot((decompisition_c.R * points[j] +
-                                           decompisition_c.t).normalized());
-            if (t_e < secondThreshold)
+            double t_e = 1.0 - thirdDirs[j].dot((decompisition_c.R * points[j] +
+                                                 decompisition_c.t).normalized());
+            if (t_e > secondThreshold)
             {
                 score += sumThresholds;
                 continue;
@@ -316,7 +318,7 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
             inliers.push_back(cast<int>(j));
         }
 
-        if (score > best_score)
+        if (score < best_score)
         {
             best_score = score;
             best_decomposition_b = decompisition_b;
@@ -373,25 +375,27 @@ Matrix3d HomographyInitializator::_computeHomography(const bearingVectors_t & di
         const bearingVector_t & dir_a = dirs_a[samples[i]];
         const bearingVector_t & dir_b = dirs_b[samples[i]];
 
+        Vector2d uv_b(dir_b.x() / dir_b.z(), dir_b.y() / dir_b.z());
+
         M(i * 2, 0) = dir_a.x();
         M(i * 2, 1) = dir_a.y();
         M(i * 2, 2) = dir_a.z();
         M(i * 2, 3) = 0.0;
         M(i * 2, 4) = 0.0;
         M(i * 2, 5) = 0.0;
-        M(i * 2, 6) = - dir_a.x() * dir_b.x();
-        M(i * 2, 7) = - dir_a.y() * dir_b.x();
-        M(i * 2, 8) = - dir_a.z() * dir_b.x();
+        M(i * 2, 6) = - dir_a.x() * uv_b.x();
+        M(i * 2, 7) = - dir_a.y() * uv_b.x();
+        M(i * 2, 8) = - dir_a.z() * uv_b.x();
 
-        M(i * 2, 0) = 0.0;
-        M(i * 2, 1) = 0.0;
-        M(i * 2, 2) = 0.0;
-        M(i * 2, 3) = dir_a.x();
-        M(i * 2, 4) = dir_a.y();
-        M(i * 2, 5) = dir_a.z();
-        M(i * 2, 6) = - dir_a.x() * dir_b.y();
-        M(i * 2, 7) = - dir_a.y() * dir_b.y();
-        M(i * 2, 8) = - dir_a.z() * dir_b.y();
+        M(i * 2 + 1, 0) = 0.0;
+        M(i * 2 + 1, 1) = 0.0;
+        M(i * 2 + 1, 2) = 0.0;
+        M(i * 2 + 1, 3) = dir_a.x();
+        M(i * 2 + 1, 4) = dir_a.y();
+        M(i * 2 + 1, 5) = dir_a.z();
+        M(i * 2 + 1, 6) = - dir_a.x() * uv_b.y();
+        M(i * 2 + 1, 7) = - dir_a.y() * uv_b.y();
+        M(i * 2 + 1, 8) = - dir_a.z() * uv_b.y();
     }
 
     if (samples.size() == 4)
@@ -472,7 +476,7 @@ HomographyInitializator::_decompose(const Matrix3d & H) const
     D = - s * p;
     for (size_t signs = 0; signs < 4; ++signs)
     {
-        _Decomposition & decomposition = decompositions[signs];
+        _Decomposition & decomposition = decompositions[4 + signs];
 
         decomposition.planeD = D;
         double sinPhi = (w1 + w3) * x1 * x3 * e1[signs] * e2[signs] / w2;

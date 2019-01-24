@@ -31,7 +31,7 @@ Vector3d generateRandomVector3d(double scale = 1.0)
 
 Matrix3d generateRandomRotationMatrix()
 {
-    return math_utils::exp_rotationMatrix(generateRandomVector3d(M_PI));
+    return math_utils::exp_rotationMatrix(generateRandomVector3d(M_PI * 0.25));
 }
 
 bool compare(const Vector3d & a, const Vector3d & b)
@@ -96,7 +96,7 @@ bool test_synthetic_initialization(AbstractInitializator * initializator)
     {
         Vector3d point(scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,
                                              (rand() % 200) * 0.1 - 10.0,
-                                             (rand() % 200) * 0.1 - 10.0));
+                                             ((rand() % 200) * 0.1 - 10.0) * 0.0));
 
         Vector3d first_local = first_R * point + first_t;
         if (first_local.z() <= 0.0)
