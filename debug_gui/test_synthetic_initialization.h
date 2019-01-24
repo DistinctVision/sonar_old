@@ -7,6 +7,6 @@ class AbstractInitializator;
 
 } // namespace sonar
 
-bool test_synthetic_initialization(sonar::AbstractInitializator * initializator);
+bool test_synthetic_initialization(sonar::AbstractInitializator * initializator, bool use_plane_flag = false);
 
 #endif // TEST_SYNTETIC_INITIALIZATION_H

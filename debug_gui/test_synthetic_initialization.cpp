@@ -59,7 +59,7 @@ bool compare(const Matrix3d & a, const Matrix3d & b)
     return true;
 }
 
-bool test_synthetic_initialization(AbstractInitializator * initializator)
+bool test_synthetic_initialization(AbstractInitializator * initializator, bool use_plane_flag)
 {
     shared_ptr<AbstractCamera> camera(new PinholeCamera(Point2d(100.0, 100.0),
                                                         Point2d(50.0, 50.0),
@@ -94,9 +94,19 @@ bool test_synthetic_initialization(AbstractInitializator * initializator)
     vector<Point2d> third_image_points(100);
     while (real_points.size() < 100)
     {
-        Vector3d point(scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,
-                                             (rand() % 200) * 0.1 - 10.0,
-                                             ((rand() % 200) * 0.1 - 10.0) * 0.0));
+        Vector3d point;
+        if (use_plane_flag && (real_points.size() < 90))
+        {
+            point = scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,
+                                          (rand() % 200) * 0.1 - 10.0,
+                                          0.0);
+        }
+        else
+        {
+            point = scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,
+                                          (rand() % 200) * 0.1 - 10.0,
+                                          (rand() % 200) * 0.1 - 10.0);
+        }
 
         Vector3d first_local = first_R * point + first_t;
         if (first_local.z() <= 0.0)

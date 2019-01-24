@@ -262,69 +262,86 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
 
     for (size_t i = 0; i < decompositions_b.size(); )
     {
-        const _Decomposition & decompisition_b = decompositions_b[i];
-        const _Decomposition & decompisition_c = decompositions_c[i];
-        points_t points = _computePoints(firstDirs, thirdDirs, best_samples,
-                                         decompisition_c.R, decompisition_c.t);
-        int nVisiblePoints = _getNumberVisiblePoints(decompisition_b, decompisition_c,
-                                                     firstDirs, secondDirs, thirdDirs,
+        const _Decomposition & decompisition = decompositions_b[i];
+        points_t points = _computePoints(firstDirs, secondDirs, best_samples,
+                                         decompisition.R, decompisition.t);
+        int nVisiblePoints = _getNumberVisiblePoints(decompisition,
+                                                     firstDirs, secondDirs,
                                                      best_samples, points);
         if (nVisiblePoints < cast<int>(best_samples.size()))
-        {
             decompositions_b.erase(decompositions_b.begin() + i);
-            decompositions_c.erase(decompositions_c.begin() + i);
-        }
         else
-        {
             ++i;
-        }
+    }
+    for (size_t i = 0; i < decompositions_c.size(); )
+    {
+        const _Decomposition & decompisition = decompositions_c[i];
+        points_t points = _computePoints(firstDirs, thirdDirs, best_samples,
+                                         decompisition.R, decompisition.t);
+        int nVisiblePoints = _getNumberVisiblePoints(decompisition,
+                                                     firstDirs, thirdDirs,
+                                                     best_samples, points);
+        if (nVisiblePoints < cast<int>(best_samples.size()))
+            decompositions_c.erase(decompositions_c.begin() + i);
+        else
+            ++i;
     }
 
     _Decomposition best_decomposition_b;
     _Decomposition best_decomposition_c;
     best_score = numeric_limits<double>::max();
     double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
-    for (size_t i = 0; i < decompositions_b.size(); ++i)
+    for (size_t i = 0; i < decompositions_c.size(); ++i)
     {
-        const _Decomposition & decompisition_b = decompositions_b[i];
         const _Decomposition & decompisition_c = decompositions_c[i];
         points_t points = _computePoints(firstDirs, thirdDirs,
                                          decompisition_c.R, decompisition_c.t);
-        inliers.resize(0);
-        double score = 0.0;
-        for (size_t j = 0; j < points.size(); ++j)
+        for (size_t j = 0; j < decompositions_b.size(); ++j)
         {
-            double f_e = 1.0 - firstDirs[j].dot(points[j].normalized());
-            if (f_e > firstThreshold)
+            _Decomposition & decompisition_b = decompositions_b[j];
+            if (decompisition_b.planeNormal.dot(decompisition_c.planeNormal) < 0.0)
             {
-                score += sumThresholds;
-                continue;
+                decompisition_b.planeNormal = - decompisition_b.planeNormal;
+                decompisition_b.planeD = - decompisition_b.planeD;
             }
-            double s_e = 1.0 - secondDirs[j].dot((decompisition_b.R * points[j] +
-                                                  decompisition_b.t).normalized());
-            if (s_e > secondThreshold)
+            decompisition_b.t *= decompisition_c.planeD / decompisition_b.planeD;
+            decompisition_b.planeD = decompisition_c.planeD;
+            inliers.resize(0);
+            double score = 0.0;
+            for (size_t k = 0; k < points.size(); ++k)
             {
-                score += sumThresholds;
-                continue;
+                double f_e = 1.0 - firstDirs[k].dot(points[k].normalized());
+                if (f_e > firstThreshold)
+                {
+                    score += sumThresholds;
+                    continue;
+                }
+                double s_e = 1.0 - secondDirs[k].dot((decompisition_b.R * points[k] +
+                                                      decompisition_b.t).normalized());
+                if (s_e > secondThreshold)
+                {
+                    score += sumThresholds;
+                    continue;
+                }
+                double t_e = 1.0 - thirdDirs[k].dot((decompisition_c.R * points[k] +
+                                                     decompisition_c.t).normalized());
+                if (t_e > secondThreshold)
+                {
+                    score += sumThresholds;
+                    continue;
+                }
+                score += f_e + s_e + t_e;
+                inliers.push_back(cast<int>(k));
             }
-            double t_e = 1.0 - thirdDirs[j].dot((decompisition_c.R * points[j] +
-                                                 decompisition_c.t).normalized());
-            if (t_e > secondThreshold)
-            {
-                score += sumThresholds;
-                continue;
-            }
-            score += f_e + s_e + t_e;
-            inliers.push_back(cast<int>(j));
-        }
 
-        if (score < best_score)
-        {
-            best_score = score;
-            best_decomposition_b = decompisition_b;
-            best_decomposition_c = decompisition_c;
-            best_inliers = move(inliers);
-            best_points = move(points);
+            if (score < best_score)
+            {
+                best_score = score;
+                best_decomposition_b = decompisition_b;
+                best_decomposition_c = decompisition_c;
+                best_inliers = move(inliers);
+                best_points = points;
+            }
         }
     }
 
@@ -335,17 +352,13 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
 
     for (auto it = plane_inliers.begin(); it != plane_inliers.end(); )
     {
-        if (std::find(best_inliers.begin(), best_inliers.end(), *it) == plane_inliers.end())
-        {
+        if (std::find(best_inliers.begin(), best_inliers.end(), *it) == best_inliers.end())
             it = plane_inliers.erase(it);
-        }
         else
-        {
             ++it;
-        }
     }
 
-    if (plane_inliers.empty())
+    if (plane_inliers.empty() || best_inliers.empty())
     {
         return make_tuple(firstTransform, secondTransform,
                           vector<int>(), points_t(),
@@ -361,7 +374,7 @@ HomographyInitializator::_compute(const bearingVectors_t & firstDirs,
     planePoint /= cast<double>(plane_inliers.size());
 
     return make_tuple(firstTransform, secondTransform,
-                      best_inliers, points,
+                      best_inliers, best_points,
                       planeNormal, planePoint);
 }
 
@@ -502,11 +515,9 @@ HomographyInitializator::_decompose(const Matrix3d & H) const
     return decompositions;
 }
 
-int HomographyInitializator::_getNumberVisiblePoints(const HomographyInitializator::_Decomposition & decompositionB,
-                                                     const HomographyInitializator::_Decomposition & decompositionC,
+int HomographyInitializator::_getNumberVisiblePoints(const HomographyInitializator::_Decomposition & decomposition,
                                                      const bearingVectors_t & dirs_a,
                                                      const bearingVectors_t & dirs_b,
-                                                     const bearingVectors_t & dirs_c,
                                                      const vector<int> & indices,
                                                      const points_t & points) const
 {
@@ -517,18 +528,12 @@ int HomographyInitializator::_getNumberVisiblePoints(const HomographyInitializat
         const point_t & point = points[i];
         const bearingVector_t & dir_a = dirs_a[cast<size_t>(indices[i])];
         const bearingVector_t & dir_b = dirs_b[cast<size_t>(indices[i])];
-        const bearingVector_t & dir_c = dirs_c[cast<size_t>(indices[i])];
 
         if (cast<float>(dir_a.dot(point)) < numeric_limits<float>::epsilon())
         {
             continue;
         }
-        if (cast<float>(dir_b.dot(decompositionB.R * point + decompositionB.t)) <
-                numeric_limits<float>::epsilon())
-        {
-            continue;
-        }
-        if (cast<float>(dir_c.dot(decompositionC.R * point + decompositionC.t)) <
+        if (cast<float>(dir_b.dot(decomposition.R * point + decomposition.t)) <
                 numeric_limits<float>::epsilon())
         {
             continue;

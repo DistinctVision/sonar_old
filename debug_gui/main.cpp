@@ -29,7 +29,7 @@ void runTests()
     int nSuccess = 0;
     for (int i = 0; i < nTests; ++i)
     {
-        if (test_synthetic_initialization(&initializator))
+        if (test_synthetic_initialization(&initializator, true))
             ++nSuccess;
     }
     auto end_time = system_clock::now();

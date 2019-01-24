@@ -47,11 +47,9 @@ private:
 
     std::vector<_Decomposition> _decompose(const Eigen::Matrix3d & H) const;
 
-    int _getNumberVisiblePoints(const _Decomposition & decompositionB,
-                                const _Decomposition & decompositionC,
+    int _getNumberVisiblePoints(const _Decomposition & decomposition,
                                 const bearingVectors_t & dirs_a,
                                 const bearingVectors_t & dirs_b,
-                                const bearingVectors_t & dirs_c,
                                 const std::vector<int> & indices,
                                 const points_t & points) const;
 
