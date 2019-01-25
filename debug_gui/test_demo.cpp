@@ -19,7 +19,7 @@
 #include <sonar/MapFrame.h>
 #include <sonar/CameraTools/PinholeCamera.h>
 #include <sonar/AbstractInitTracker.h>
-#include <sonar/Initializator.h>
+#include <sonar/AbstractInitializator.h>
 #include <sonar/System.h>
 
 using namespace sonar;

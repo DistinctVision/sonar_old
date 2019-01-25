@@ -8,6 +8,8 @@
 #include <sonar/SourceFrame.h>
 #include <sonar/AbstractInitTracker.h>
 #include <sonar/CPU_InitTracker.h>
+#include <sonar/AbstractInitializator.h>
+#include <sonar/HomographyInitializator.h>
 #include <sonar/Initializator.h>
 #include <sonar/MapFrame.h>
 
@@ -26,7 +28,7 @@ System::System():
     m_trackingState(TrackingState::NotStarted),
     m_trackingQuality(TrackingQuality::Ugly)
 {
-    m_initializator = make_shared<Initializator>();
+    setInitializatorType(InitializatorType::Homography);
     setProcessingMode(ProcessingMode::CPU);
 }
 
@@ -68,12 +70,34 @@ shared_ptr<AbstractInitTracker> System::initTracker()
     return m_initTracker;
 }
 
-shared_ptr<const Initializator> System::initializator() const
+InitializatorType System::initializatorType() const
+{
+    return m_initializatorType;
+}
+
+void System::setInitializatorType(InitializatorType initializatorType)
+{
+    switch (m_initializatorType) {
+    case InitializatorType::Homography:
+        m_initializator = make_shared<HomographyInitializator>();
+        break;
+#if defined(OPENGV_LIB)
+    case InitializatorType::Common:
+        m_initializator = make_shared<Initializator>();
+        break;
+#endif
+    default:
+        throw std::invalid_argument("initializatorType is not valid");
+    }
+    m_initializatorType = initializatorType;
+}
+
+shared_ptr<const AbstractInitializator> System::initializator() const
 {
     return m_initializator;
 }
 
-shared_ptr<Initializator> System::initializator()
+std::shared_ptr<AbstractInitializator> System::initializator()
 {
     return m_initializator;
 }
@@ -116,7 +140,7 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
         if (m_initTracker->isFinished())
         {
             bool successFlag;
-            Initializator::Info initInfo;
+            AbstractInitializator::Info initInfo;
             tie(successFlag, initInfo) = m_initializator->compute(
                         m_camera,
                         cast<double>(m_initTracker->capturedFramePoints(0)),
@@ -139,7 +163,7 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
 
     case TrackingState::Tracking: {
         m_trackingQuality = TrackingQuality::Good;
-        Initializator::Info initInfo = m_initializator->lastInitializationInfo();
+        AbstractInitializator::Info initInfo = m_initializator->lastInitializationInfo();
         Matrix3d R = initInfo.thirdTransfrom.block<3, 3>(0, 0);
         Vector3d t = initInfo.thirdTransfrom.col(3);
         return make_shared<MapFrame>(make_shared<SourceFrame>(sourceFrame),

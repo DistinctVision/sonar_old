@@ -6,6 +6,7 @@
 #include <random>
 #include <chrono>
 #include <iostream>
+#include <cstdlib>
 
 #include "test_synthetic_initialization.h"
 #include "test_demo.h"
@@ -23,15 +24,15 @@ void runTests()
 
     system_clock::time_point start_time = system_clock::now();
 
-    AbstractInitializator * initializator = new HomographyInitializator();
-    //sonar::AbstractInitializator * initializator = new sonar::Initializator();
+    unique_ptr<AbstractInitializator> initializator(new HomographyInitializator());
+    //unique_ptr<AbstractInitializator> initializator(new Initializator());
 
     int nTests = 100;
     int nSuccess = 0;
     for (int i = 0; i < nTests; ++i)
     {
-        if (test_synthetic_initialization(initializator,
-                                          (dynamic_cast<HomographyInitializator*>(initializator) != nullptr)))
+        if (test_synthetic_initialization(initializator.get(),
+                                          (dynamic_cast<HomographyInitializator*>(initializator.get()) != nullptr)))
         {
             ++nSuccess;
         }
@@ -40,7 +41,8 @@ void runTests()
     int delta_time = static_cast<int>(duration_cast<milliseconds>(end_time - start_time).count() / nTests);
 
     cout << "test result: " << nSuccess << " / " << nTests << " time = " << delta_time << "ms" << endl;
-    assert(nSuccess >= static_cast<int>(nTests * 0.98));
+
+    assert(nSuccess >= static_cast<int>(nTests * 0.96));
 }
 
 void runDemo()

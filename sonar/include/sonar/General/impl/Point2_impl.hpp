@@ -14,6 +14,13 @@ Point2<Type>::Point2()
 {}
 
 template < typename Type >
+Point2<Type>::Point2(Type value)
+{
+    this->x = value;
+    this->y = value;
+}
+
+template < typename Type >
 void Point2<Type>::set(Type x, Type y)
 {
     this->x = x;

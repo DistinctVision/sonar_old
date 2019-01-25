@@ -619,7 +619,7 @@ void gaussianBlurX(Image<Type> & out, const ImageRef<Type> & in, int halfSizeBlu
         g[k] /= sumG;
     }
     int c;
-    RealSumType sum;
+    typename Cast<Type, RealSumType>::Type sum;
     const Type * inStr = in.data();
     Type * outStr = out.data();
     for (p.y = 0; p.y < sizeImage.y; ++p.y) {
@@ -627,26 +627,26 @@ void gaussianBlurX(Image<Type> & out, const ImageRef<Type> & in, int halfSizeBlu
             sum = cast<RealSumType>(0);
             c = p.x - halfSizeBlur;
             for (k = 0; c <= 0; ++k, ++c)
-                sum += cast<RealSumType>(inStr[0] * g[k]);
+                sum = sum + cast<RealSumType>(inStr[0] * g[k]);
             for (; k < sizeKernel; ++k, ++c)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
-            outStr[p.x] = cast<Type>(sum);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
+            outStr[p.x] = cast<typename BaseElement<Type>::Type>(sum);
         }
         for (p.x = beginCenterRegionX; p.x < endCenterRegionX; ++p.x) {
             c = p.x - halfSizeBlur;
             sum = cast<RealSumType>(0);
             for (k = 0; k < sizeKernel; ++k, ++c)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
-            outStr[p.x] = cast<Type>(sum);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
+            outStr[p.x] = cast<typename BaseElement<Type>::Type>(sum);
         }
         for (p.x = endCenterRegionX; p.x < sizeImage.x; ++p.x) {
             sum = cast<RealSumType>(0);
             c = p.x - halfSizeBlur;
             for (k = 0; c < sizeImage.x - 1; ++k, ++c)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
             for (; k < sizeKernel; ++k)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
-            outStr[p.x] = cast<Type>(sum);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
+            outStr[p.x] = cast<typename BaseElement<Type>::Type>(sum);
         }
         inStr = &inStr[in.widthStep()];
         outStr = &outStr[out.widthStep()];
@@ -679,7 +679,7 @@ void gaussianBlurY(Image<Type> & out, const ImageRef<Type> & in, int halfSizeBlu
     for (k = 0; k < sizeKernel; ++k) {
         g[k] /= sumG;
     }
-    RealSumType sum;
+    typename Cast<Type, RealSumType>::Type sum;
     int c;
     int c_offset = - halfSizeBlur * in_str_step;
     const Type * inStr = in.data();
@@ -690,10 +690,10 @@ void gaussianBlurY(Image<Type> & out, const ImageRef<Type> & in, int halfSizeBlu
             c = p.x + c_offset;
             sum = cast<RealSumType>(0);
             for (k = 0; k < c_limit; ++k, c += in_str_step)
-                sum += cast<RealSumType>(inStr[p.x] * g[k]);
+                sum = sum + cast<RealSumType>(inStr[p.x] * g[k]);
             for (; k < sizeKernel; ++k, c += in_str_step)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
-            outStr[p.x] = cast<Type>(sum);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
+            outStr[p.x] = cast<typename BaseElement<Type>::Type>(sum);
         }
         inStr = &inStr[in_str_step];
         outStr = &outStr[out.widthStep()];
@@ -703,8 +703,8 @@ void gaussianBlurY(Image<Type> & out, const ImageRef<Type> & in, int halfSizeBlu
             c = p.x + c_offset;
             sum = cast<RealSumType>(0);
             for (k = 0; k < sizeKernel; ++k, c += in_str_step)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
-            outStr[p.x] = cast<Type>(sum);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
+            outStr[p.x] = cast<typename BaseElement<Type>::Type>(sum);
         }
         inStr = &inStr[in_str_step];
         outStr = &outStr[out.widthStep()];
@@ -715,10 +715,10 @@ void gaussianBlurY(Image<Type> & out, const ImageRef<Type> & in, int halfSizeBlu
             c = p.x + c_offset;
             sum = cast<RealSumType>(0);
             for (k=0; k < c_limit; ++k, c += in_str_step)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
             for (; k < sizeKernel; ++k)
-                sum += cast<RealSumType>(inStr[c] * g[k]);
-            outStr[p.x] = cast<Type>(sum);
+                sum = sum + cast<RealSumType>(inStr[c] * g[k]);
+            outStr[p.x] = cast<typename BaseElement<Type>::Type>(sum);
         }
         inStr = &inStr[in_str_step];
         outStr = &outStr[out.widthStep()];

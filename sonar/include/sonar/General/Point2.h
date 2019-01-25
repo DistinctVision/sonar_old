@@ -25,6 +25,7 @@ public:
     Type x, y;
 
     Point2();
+    Point2(Type value);
 
     inline Point2(Type x, Type y);
     inline Point2 operator + (const Point2 & p) const;

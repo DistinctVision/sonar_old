@@ -32,10 +32,16 @@ enum class ProcessingMode: int
     OPENGL
 };
 
+enum class InitializatorType: int
+{
+    Homography = 0,
+    Common
+};
+
 // forward declaration
 class SourceFrame;
 class AbstractInitTracker;
-class Initializator;
+class AbstractInitializator;
 class MapFrame;
 class AbstractCamera;
 
@@ -52,8 +58,11 @@ public:
     std::shared_ptr<const AbstractInitTracker> initTracker() const;
     std::shared_ptr<AbstractInitTracker> initTracker();
 
-    std::shared_ptr<const Initializator> initializator() const;
-    std::shared_ptr<Initializator> initializator();
+    std::shared_ptr<const AbstractInitializator> initializator() const;
+    std::shared_ptr<AbstractInitializator> initializator();
+
+    InitializatorType initializatorType() const;
+    void setInitializatorType(InitializatorType initializatorType);
 
     std::shared_ptr<const AbstractCamera> camera() const;
     void setCamera(const std::shared_ptr<const AbstractCamera> & camera);
@@ -69,7 +78,8 @@ private:
     ProcessingMode m_processingMode;
 
     std::shared_ptr<AbstractInitTracker> m_initTracker;
-    std::shared_ptr<Initializator> m_initializator;
+    InitializatorType m_initializatorType;
+    std::shared_ptr<AbstractInitializator> m_initializator;
 
     std::shared_ptr<const AbstractCamera> m_camera;
 };

@@ -73,12 +73,12 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
     Matrix3d real_secondWorldRotation = generateRandomRotationMatrix();
     //real_secondWorldRotation = math_utils::exp_rotationMatrix(Vector3d(M_PI * 0.5, 0.0, 0.0));
     Vector3d real_secondWorldPosition = scenePoint - real_secondWorldRotation *
-            Vector3d(0.0, 0.0, ((rand() % 10) * 1e-1) + 15.0);
+            Vector3d(0.0, 0.0, ((rand() % 10) * 1e-1) + 19.0);
 
     Matrix3d real_thirdWorldRotation = generateRandomRotationMatrix();
     //real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI * 0.5, 0.0, 0.0));
     Vector3d real_thirdWorldPosition = scenePoint - real_thirdWorldRotation *
-            Vector3d(0.0, 0.0, ((rand() % 10) * 1e-1) + 15.0);
+            Vector3d(0.0, 0.0, ((rand() % 10) * 1e-1) + 19.0);
 
     Matrix3d first_R = real_firstWorldRotation.inverse();
     Vector3d first_t = - first_R * real_firstWorldPosition;
@@ -97,15 +97,15 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
         Vector3d point;
         if (use_plane_flag && (real_points.size() < 50))
         {
-            point = Vector3d((rand() % 200) * 0.1 - 10.0,
-                             (rand() % 200) * 0.1 - 10.0,
+            point = Vector3d((rand() % 100) * 0.1 - 5.0,
+                             (rand() % 100) * 0.1 - 5.0,
                              0.0) + scenePoint;
         }
         else
         {
-            point = Vector3d((rand() % 200) * 0.1 - 10.0,
-                             (rand() % 200) * 0.1 - 10.0,
-                             (rand() % 200) * 0.1 - 10.0) + scenePoint;
+            point = Vector3d((rand() % 100) * 0.1 - 5.0,
+                             (rand() % 100) * 0.1 - 5.0,
+                             (rand() % 100) * 0.1 - 5.0) + scenePoint;
         }
 
         Vector3d first_local = first_R * point + first_t;
@@ -123,7 +123,7 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
         real_points.push_back(point);
     }
 
-    Initializator::Info info;
+    AbstractInitializator::Info info;
     bool successFlag;
     tie(successFlag, info) = initializator->compute(camera, first_image_points,
                                                     camera, second_image_points,
