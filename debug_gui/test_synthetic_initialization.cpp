@@ -29,9 +29,9 @@ Vector3d generateRandomVector3d(double scale = 1.0)
                     (rand() % 2000 - 1000)).normalized() * scale;
 }
 
-Matrix3d generateRandomRotationMatrix()
+Matrix3d generateRandomRotationMatrix(double delta_angle = M_PI * 0.25)
 {
-    return math_utils::exp_rotationMatrix(generateRandomVector3d(M_PI * 0.25));
+    return math_utils::exp_rotationMatrix(generateRandomVector3d(delta_angle));
 }
 
 bool compare(const Vector3d & a, const Vector3d & b)
@@ -39,7 +39,7 @@ bool compare(const Vector3d & a, const Vector3d & b)
     Vector3d d = (a - b).array().abs();
     for (int i = 0; i < 3; ++i)
     {
-        if (d(i) > 1e-3)
+        if (d(i) > 3e-2)
             return false;
     }
     return true;
@@ -52,7 +52,7 @@ bool compare(const Matrix3d & a, const Matrix3d & b)
     {
         for (int j = 0; j < 3; ++j)
         {
-            if (d(i, j) > 1e-2)
+            if (d(i, j) > 3e-2)
                 return false;
         }
     }
@@ -65,7 +65,7 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
                                                         Point2d(50.0, 50.0),
                                                         Point2i(100, 100)));
 
-    Vector3d scenePoint(0.0, 0.0, 100.0);
+    Vector3d scenePoint(0.0, 0.0, 20.0);
 
     Matrix3d real_firstWorldRotation = Matrix3d::Identity();
     Vector3d real_firstWorldPosition = Vector3d::Zero();
@@ -73,12 +73,12 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
     Matrix3d real_secondWorldRotation = generateRandomRotationMatrix();
     //real_secondWorldRotation = math_utils::exp_rotationMatrix(Vector3d(M_PI * 0.5, 0.0, 0.0));
     Vector3d real_secondWorldPosition = scenePoint - real_secondWorldRotation *
-            Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
+            Vector3d(0.0, 0.0, ((rand() % 10) * 1e-1) + 15.0);
 
     Matrix3d real_thirdWorldRotation = generateRandomRotationMatrix();
     //real_thirdWorldRotation = math_utils::exp_rotationMatrix(Vector3d(-M_PI * 0.5, 0.0, 0.0));
     Vector3d real_thirdWorldPosition = scenePoint - real_thirdWorldRotation *
-            Vector3d(0.0, 0.0, ((rand() % 100) * 1e-1) + 90.0);
+            Vector3d(0.0, 0.0, ((rand() % 10) * 1e-1) + 15.0);
 
     Matrix3d first_R = real_firstWorldRotation.inverse();
     Vector3d first_t = - first_R * real_firstWorldPosition;
@@ -95,17 +95,17 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
     while (real_points.size() < 100)
     {
         Vector3d point;
-        if (use_plane_flag && (real_points.size() < 90))
+        if (use_plane_flag && (real_points.size() < 50))
         {
-            point = scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,
-                                          (rand() % 200) * 0.1 - 10.0,
-                                          0.0);
+            point = Vector3d((rand() % 200) * 0.1 - 10.0,
+                             (rand() % 200) * 0.1 - 10.0,
+                             0.0) + scenePoint;
         }
         else
         {
-            point = scenePoint + Vector3d((rand() % 200) * 0.1 - 10.0,
-                                          (rand() % 200) * 0.1 - 10.0,
-                                          (rand() % 200) * 0.1 - 10.0);
+            point = Vector3d((rand() % 200) * 0.1 - 10.0,
+                             (rand() % 200) * 0.1 - 10.0,
+                             (rand() % 200) * 0.1 - 10.0) + scenePoint;
         }
 
         Vector3d first_local = first_R * point + first_t;

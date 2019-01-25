@@ -1,10 +1,16 @@
+/**
+* This file is part of sonar library
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
+* For more information see <https://github.com/DistinctVision/sonar>
+**/
+
 #include "sonar/AbstractInitializator.h"
 
 namespace sonar {
 
 AbstractInitializator::AbstractInitializator():
-    m_minNumberPoints(20),
-    m_maxPixelError(4.0f)
+    m_minNumberPoints(6),
+    m_maxPixelError(2.0f)
 {
 }
 

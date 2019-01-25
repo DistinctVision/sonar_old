@@ -1,3 +1,9 @@
+/**
+* This file is part of sonar library
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
+* For more information see <https://github.com/DistinctVision/sonar>
+**/
+
 #include "sonar/HomographyInitializator.h"
 
 #include <cassert>
@@ -21,7 +27,7 @@ using namespace sonar::math_utils;
 namespace sonar {
 
 HomographyInitializator::HomographyInitializator():
-    m_numberRansacIterations(300)
+    m_numberRansacIterations(400)
 {
 
 }

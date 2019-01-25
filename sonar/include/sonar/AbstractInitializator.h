@@ -1,3 +1,9 @@
+/**
+* This file is part of sonar library
+* Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
+* For more information see <https://github.com/DistinctVision/sonar>
+**/
+
 #ifndef SONAR_ABSTRACTINITIALIZATOR_H
 #define SONAR_ABSTRACTINITIALIZATOR_H
 
