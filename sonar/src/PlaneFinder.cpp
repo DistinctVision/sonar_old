@@ -22,7 +22,7 @@ using namespace Eigen;
 namespace sonar {
 
 PlaneFinder::PlaneFinder():
-    m_distanceThreshold(0.1),
+    m_distanceThreshold(0.5),
     m_numberRansacIterations(50)
 {
 }
@@ -110,7 +110,7 @@ PlaneFinder::Plane PlaneFinder::find(const points_t & points)
     if (best_inliers.empty())
     {
         return Plane {
-            Vector3d(0.0, 1.0, 0.0),
+            Vector3d(0.0, 0.0, 1.0),
             Vector3d(0.0, 0.0, 0.0),
             vector<int>()
         };
@@ -134,7 +134,7 @@ transformation_t PlaneFinder::getPlaneTransformation(const PlaneFinder::Plane & 
     }
 
     Vector3d planeAxisX = planeAxisZ.cross(delta).normalized();
-    Vector3d planeAxisY = planeAxisX.cross(planeAxisZ);
+    Vector3d planeAxisY = planeAxisX.cross(planeAxisZ).normalized();
 
     transformation_t transformation;
     transformation.col(0) = planeAxisX;

@@ -51,18 +51,20 @@ public:
     System();
 
     TrackingState trackingState() const;
+
     TrackingQuality trackingQuality() const;
+
     ProcessingMode processingMode() const;
     void setProcessingMode(ProcessingMode mode);
+
+    InitializatorType initializatorType() const;
+    void setInitializatorType(InitializatorType initializatorType);
 
     std::shared_ptr<const AbstractInitTracker> initTracker() const;
     std::shared_ptr<AbstractInitTracker> initTracker();
 
     std::shared_ptr<const AbstractInitializator> initializator() const;
     std::shared_ptr<AbstractInitializator> initializator();
-
-    InitializatorType initializatorType() const;
-    void setInitializatorType(InitializatorType initializatorType);
 
     std::shared_ptr<const AbstractCamera> camera() const;
     void setCamera(const std::shared_ptr<const AbstractCamera> & camera);

@@ -54,8 +54,8 @@ int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 
-    //runDemo();
-    runTests();
+    runDemo();
+    //runTests();
 
     //return app.exec();
     return 0;

@@ -9,8 +9,9 @@
 namespace sonar {
 
 AbstractInitializator::AbstractInitializator():
-    m_minNumberPoints(6),
-    m_maxPixelError(2.0f)
+    m_minNumberPoints(8),
+    m_maxPixelError(3.0f),
+    m_distanceToPlane(3.0)
 {
 }
 
@@ -36,6 +37,16 @@ float AbstractInitializator::maxPixelError() const
 void AbstractInitializator::setMaxPixelError(float maxPixelError)
 {
     m_maxPixelError = maxPixelError;
+}
+
+double AbstractInitializator::distanceToPlane() const
+{
+    return m_distanceToPlane;
+}
+
+void AbstractInitializator::setDistanceToPlane(double distanceToPlane)
+{
+    m_distanceToPlane = distanceToPlane;
 }
 
 AbstractInitializator::Info AbstractInitializator::lastInitializationInfo() const

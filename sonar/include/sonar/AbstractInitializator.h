@@ -44,6 +44,9 @@ public:
     float maxPixelError() const;
     void setMaxPixelError(float maxPixelError);
 
+    double distanceToPlane() const;
+    void setDistanceToPlane(double distanceToPlane);
+
     Info lastInitializationInfo() const;
 
     virtual std::tuple<bool, Info> compute(const std::shared_ptr<const AbstractCamera> & firstCamera,
@@ -60,6 +63,7 @@ protected:
 private:
     int m_minNumberPoints;
     float m_maxPixelError;
+    double m_distanceToPlane;
 };
 
 } // namespace sonar

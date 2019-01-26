@@ -60,16 +60,6 @@ void System::setProcessingMode(ProcessingMode mode)
     m_processingMode = mode;
 }
 
-shared_ptr<const AbstractInitTracker> System::initTracker() const
-{
-    return m_initTracker;
-}
-
-shared_ptr<AbstractInitTracker> System::initTracker()
-{
-    return m_initTracker;
-}
-
 InitializatorType System::initializatorType() const
 {
     return m_initializatorType;
@@ -77,7 +67,7 @@ InitializatorType System::initializatorType() const
 
 void System::setInitializatorType(InitializatorType initializatorType)
 {
-    switch (m_initializatorType) {
+    switch (initializatorType) {
     case InitializatorType::Homography:
         m_initializator = make_shared<HomographyInitializator>();
         break;
@@ -90,6 +80,16 @@ void System::setInitializatorType(InitializatorType initializatorType)
         throw std::invalid_argument("initializatorType is not valid");
     }
     m_initializatorType = initializatorType;
+}
+
+shared_ptr<const AbstractInitTracker> System::initTracker() const
+{
+    return m_initTracker;
+}
+
+shared_ptr<AbstractInitTracker> System::initTracker()
+{
+    return m_initTracker;
 }
 
 shared_ptr<const AbstractInitializator> System::initializator() const
@@ -150,7 +150,7 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
                         cast<double>(m_initTracker->capturedFramePoints(2)));
             if (!successFlag)
             {
-                m_initTracker->reset();
+                reset();
                 break;
             }
             m_trackingState = TrackingState::Tracking;

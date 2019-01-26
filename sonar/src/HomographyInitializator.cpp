@@ -1,4 +1,4 @@
-/**
+﻿/**
 * This file is part of sonar library
 * Copyright (C) 2019 Vlasov Aleksey ijonsilent53@gmail.com
 * For more information see <https://github.com/DistinctVision/sonar>
@@ -88,19 +88,11 @@ HomographyInitializator::compute(const shared_ptr<const AbstractCamera> & firstC
         transformation_t & firstTransform = m_lastInitializationInfo.firstTransfrom;
         transformation_t & secondTransform = m_lastInitializationInfo.secondTransfrom;
         transformation_t & thirdTransform = m_lastInitializationInfo.thirdTransfrom;
+
         if (alignByPlaneFlag) // move all coordinates in plane space
         {
-            double t;
-            if (!_pickPlane(t, planeNormal, planePoint, Vector3d(0.0, 0.0, 1.0), Vector3d(0.0, 0.0, 0.0)))
-            {
-                return make_tuple(false, m_lastInitializationInfo);
-            }
-            if (cast<float>(t) < numeric_limits<float>::epsilon())
-            {
-                return make_tuple(false, m_lastInitializationInfo);
-            }
-
-            double scale = 1.0 / t;
+            double scale = distanceToPlane() / planePoint.norm();
+            double invScale = 1.0 / scale;
 
             Matrix3d planeRotation;
             {
@@ -124,9 +116,9 @@ HomographyInitializator::compute(const shared_ptr<const AbstractCamera> & firstC
             Matrix3d invPlaneRotation = planeRotation.inverse();
 
             planePoint *= scale;
-            firstTransform.col(3) *= scale;
-            secondTransform.col(3) *= scale;
-            thirdTransform.col(3) *= scale;
+            firstTransform.col(3) *= invScale;
+            secondTransform.col(3) *= invScale;
+            thirdTransform.col(3) *= invScale;
 
             for (point_t & point : points)
                 point = (invPlaneRotation * (point * scale - planePoint)).eval();

@@ -117,39 +117,28 @@ tuple<bool, Initializator::Info> Initializator::compute(const std::shared_ptr<co
         transformation_t & thirdTransform = m_lastInitializationInfo.thirdTransfrom;
         if (!plane.inliers.empty() && alignByPlaneFlag) // move all coordinates in plane space
         {
-            Vector3d thirdWorldPosition = - thirdTransform.block<3, 3>(0, 0).inverse() * thirdTransform.col(3);
+            transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, Vector3d::Zero());
+            Vector3d planePoint = planeTransformation.col(3);
 
-            transformation_t planeTransformation = m_planeFinder->getPlaneTransformation(plane, thirdWorldPosition);
-            Vector3d planePosition = planeTransformation.col(3);
-            Vector3d planeNormal = planeTransformation.col(2);
-            double t;
-            if (!_pickPlane(t, planeNormal, planePosition, Vector3d(0.0, 0.0, 1.0), Vector3d(0.0, 0.0, 0.0)))
-            {
-                return make_tuple(false, m_lastInitializationInfo);
-            }
-            if (cast<float>(t) < numeric_limits<float>::epsilon())
-            {
-                return make_tuple(false, m_lastInitializationInfo);
-            }
-
-            double scale = 1.0 / t;
+            double scale = distanceToPlane() / planePoint.norm();
+            double invScale = 1.0 / scale;
 
             Matrix3d planeRotation = planeTransformation.block<3, 3>(0, 0);
             Matrix3d invPlaneRotation = planeRotation.inverse();
 
-            planePosition *= scale;
-            firstTransform.col(3) *= scale;
-            secondTransform.col(3) *= scale;
-            thirdTransform.col(3) *= scale;
+            planePoint *= scale;
+            firstTransform.col(3) *= invScale;
+            secondTransform.col(3) *= invScale;
+            thirdTransform.col(3) *= invScale;
 
             for (point_t & point : points)
-                point = (invPlaneRotation * (point * scale - planePosition)).eval();
+                point = (invPlaneRotation * (point * scale - planePoint)).eval();
 
-            firstTransform.col(3) = planePosition;
+            firstTransform.col(3) = planePoint;
             firstTransform.block<3, 3>(0, 0) = planeRotation;
-            secondTransform.col(3) += secondTransform.block<3, 3>(0, 0) * planePosition;
+            secondTransform.col(3) += secondTransform.block<3, 3>(0, 0) * planePoint;
             secondTransform.block<3, 3>(0, 0) *= planeRotation;
-            thirdTransform.col(3) += thirdTransform.block<3, 3>(0, 0) * planePosition;
+            thirdTransform.col(3) += thirdTransform.block<3, 3>(0, 0) * planePoint;
             thirdTransform.block<3, 3>(0, 0) *= planeRotation;
         }
 
@@ -249,7 +238,7 @@ Initializator::_compute(const bearingVectors_t & firstDirs,
     JacobiSVD<Matrix<double, 4, 4>> SVD;
     Matrix<double, 4, 4> M;
     double sumThresholds = firstThreshold + secondThreshold + thirdThreshold;
-    for (int iteration = 0; iteration < 30; )
+    for (int iteration = 0; iteration < m_numberRansacTransformsIterations; )
     {
         swap(shuffled_indices[0],
              shuffled_indices[cast<size_t>(rnd(rnd_gen)) % shuffled_indices.size()]);
