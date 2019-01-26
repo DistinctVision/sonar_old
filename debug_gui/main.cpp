@@ -8,11 +8,11 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <sonar/HomographyInitializator.h>
+#include <sonar/Initializator.h>
+
 #include "test_synthetic_initialization.h"
 #include "test_demo.h"
-
-#include <sonar/Initializator.h>
-#include <sonar/HomographyInitializator.h>
 
 void runTests()
 {
