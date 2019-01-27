@@ -11,4 +11,5 @@ SOURCES += \
     $$PWD/SourceFrame.cpp \
     $$PWD/System.cpp \
     $$PWD/AbstractInitializator.cpp \
-    $$PWD/HomographyInitializator.cpp
+    $$PWD/HomographyInitializator.cpp \
+    $$PWD/Sonar_c.cpp

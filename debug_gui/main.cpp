@@ -42,7 +42,7 @@ void runTests()
 
     cout << "test result: " << nSuccess << " / " << nTests << " time = " << delta_time << "ms" << endl;
 
-    assert(nSuccess >= static_cast<int>(nTests * 0.96));
+    assert(nSuccess >= static_cast<int>(nTests * 0.95));
 }
 
 void runDemo()
