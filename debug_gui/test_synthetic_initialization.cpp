@@ -1,11 +1,7 @@
 #include "test_synthetic_initialization.h"
 
 #include <sonar/AbstractInitializator.h>
-
-#include <opengv/types.hpp>
-
 #include <sonar/CameraTools/PinholeCamera.h>
-#include <sonar/Initializator.h>
 #include <sonar/MapFrame.h>
 #include <sonar/System.h>
 
@@ -19,7 +15,6 @@
 
 using namespace std;
 using namespace Eigen;
-using namespace opengv;
 using namespace sonar;
 
 Vector3d generateRandomVector3d(double scale = 1.0)
@@ -87,7 +82,7 @@ bool test_synthetic_initialization(AbstractInitializator * initializator, bool u
     Matrix3d third_R = real_thirdWorldRotation.inverse();
     Vector3d third_t = - third_R * real_thirdWorldPosition;
 
-    points_t real_points;
+    sonar::points_t real_points;
     real_points.reserve(100);
     vector<Point2d> first_image_points(100);
     vector<Point2d> second_image_points(100);

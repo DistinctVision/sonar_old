@@ -6,6 +6,12 @@ CONFIG += c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
+contains(DEFINES, BLABLA) {
+    message(True)
+} else {
+    message("False")
+}
+
 TEST_BUILD_SHARED = $$(BUILD_SHARED)
 isEmpty(TEST_BUILD_SHARED) {
     CONFIG += static

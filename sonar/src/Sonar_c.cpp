@@ -64,9 +64,9 @@ public:
         m_system->reset();
     }
 
-    void process_image_frame(uchar * imageData, int imageWidth, int imageHeight)
+    void process_image_frame(const uchar * imageData, int imageWidth, int imageHeight)
     {
-        m_system->process(SourceFrame(Image<uchar>(Point2i(imageWidth, imageHeight), imageData, false)));
+        m_system->process(SourceFrame(ConstImage<uchar>(Point2i(imageWidth, imageHeight), imageData, false)));
     }
 
     void get_current_frame_pose(double * out_rotation_ptr, double * out_translation_ptr)
@@ -142,7 +142,7 @@ void sonar_reset()
     sonar::SystemContext::instance().reset();
 }
 
-void sonar_process_image_frame(unsigned char * imageData, int imageWidth, int imageHeight)
+void sonar_process_image_frame(const unsigned char *imageData, int imageWidth, int imageHeight)
 {
     sonar::SystemContext::instance().process_image_frame(imageData, imageWidth, imageHeight);
 }

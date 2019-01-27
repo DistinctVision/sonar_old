@@ -14,11 +14,12 @@ CONFIG(debug, debug|release) {
     OBJECTS_DIR = debug/obj
 
     windows {
-        PRE_TARGETDEPS += $$OUT_PWD/../sonar/sonar.lib
+        PRE_TARGETDEPS += $$OUT_PWD/../sonar/debug/sonar.lib
+        LIBS += -L$$OUT_PWD/../sonar/debug -lsonar
     } else: linux {
         PRE_TARGETDEPS += $$OUT_PWD/../sonar/libsonar.a
+        LIBS += -L$$OUT_PWD/../sonar -lsonar
     }
-    LIBS += -L$$OUT_PWD/../sonar -lsonar
 } else {
     MOC_DIR = release/moc
     RCC_DIR = release/rcc
@@ -26,9 +27,11 @@ CONFIG(debug, debug|release) {
     OBJECTS_DIR = release/obj
 
     windows {
-        PRE_TARGETDEPS += $$OUT_PWD/../sonar/sonar.lib
+        PRE_TARGETDEPS += $$OUT_PWD/../sonar/release/sonar.lib
+        LIBS += -L$$OUT_PWD/../sonar/release -lsonar
     } else: linux {
         PRE_TARGETDEPS += $$OUT_PWD/../sonar/libsonar.a
+        LIBS += -L$$OUT_PWD/../sonar -lsonar
     }
     LIBS += -L$$OUT_PWD/../sonar -lsonar
 }

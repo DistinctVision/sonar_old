@@ -6,8 +6,6 @@
 
 #include <Eigen/Core>
 
-#include <opengv/types.hpp>
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -155,7 +153,7 @@ bool test_demo()
 {
     cv::VideoCapture capture;
 
-    if (!capture.open(0))
+    if (!capture.open(1))
     {
         cerr << "camera not found" << endl;
         return false;

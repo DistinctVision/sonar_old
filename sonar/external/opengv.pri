@@ -13,9 +13,13 @@ linux {
     } else {
         INCLUDEPATH += $$(OPENGV_DIR)\include
         DEPENDPATH += $$(OPENGV_DIR)\include
-
-        PRE_TARGETDEPS += $$(OPENGV_DIR)\lib\opengv.lib
-        LIBS += -L$$(OPENGV_DIR)\lib -lopengv
+        CONFIG(debug, debug|release) {
+            PRE_TARGETDEPS += $$(OPENGV_DIR)\lib\opengvd.lib
+            LIBS += -L$$(OPENGV_DIR)\lib -lopengvd
+        } else {
+            PRE_TARGETDEPS += $$(OPENGV_DIR)\lib\opengv.lib
+            LIBS += -L$$(OPENGV_DIR)\lib -lopengv
+        }
     }
 } else {
     error("OpenGV not included")

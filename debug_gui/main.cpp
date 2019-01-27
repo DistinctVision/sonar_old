@@ -47,7 +47,8 @@ void runTests()
 
 void runDemo()
 {
-    assert(test_demo());
+    bool testResultFlag = test_demo();
+    assert(testResultFlag);
 }
 
 int main(int argc, char ** argv)
