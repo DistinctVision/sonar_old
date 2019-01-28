@@ -66,17 +66,17 @@ public:
 
     void process_image_frame(const uchar * imageData, int imageWidth, int imageHeight)
     {
-        m_system->process(SourceFrame(ConstImage<uchar>(Point2i(imageWidth, imageHeight), imageData, false)));
+        m_currentMapFrame = m_system->process(SourceFrame(ConstImage<uchar>(Point2i(imageWidth, imageHeight), imageData, false)));
     }
 
-    void get_current_frame_pose(double * out_rotation_ptr, double * out_translation_ptr)
+    void get_current_frame_pose_Rt(double * out_rotation_ptr, double * out_translation_ptr)
     {
         Eigen::Matrix3d R;
         Eigen::Vector3d t;
-        if (m_mapFrame)
+        if (m_currentMapFrame)
         {
-            R = m_mapFrame->rotation();
-            t = m_mapFrame->translation();
+            R = m_currentMapFrame->rotation();
+            t = m_currentMapFrame->translation();
         }
         else
         {
@@ -97,6 +97,29 @@ public:
         out_translation_ptr[2] = t(2);
     }
 
+    void get_current_frame_pose_qt(double * out_quaternion_ptr, double * out_translation_ptr)
+    {
+        Eigen::Quaterniond q;
+        Eigen::Vector3d t;
+        if (m_currentMapFrame)
+        {
+            q = Eigen::Quaterniond(m_currentMapFrame->rotation());
+            t = m_currentMapFrame->translation();
+        }
+        else
+        {
+            q.setIdentity();
+            t.setZero();
+        }
+        out_quaternion_ptr[0] = q.x();
+        out_quaternion_ptr[1] = q.y();
+        out_quaternion_ptr[2] = q.z();
+        out_quaternion_ptr[3] = q.w();
+        out_translation_ptr[0] = t(0);
+        out_translation_ptr[1] = t(1);
+        out_translation_ptr[2] = t(2);
+    }
+
     int get_number_init_image_points(int indexStep)
     {
         return cast<int>(m_system->initTracker()->capturedFramePoints(indexStep).size());
@@ -111,7 +134,7 @@ public:
 private:
     std::unique_ptr<System> m_system;
     std::shared_ptr<AbstractCamera> m_camera;
-    std::shared_ptr<MapFrame> m_mapFrame;
+    std::shared_ptr<const MapFrame> m_currentMapFrame;
 };
 
 } // namespace sonar
@@ -147,9 +170,14 @@ void sonar_process_image_frame(const unsigned char *imageData, int imageWidth, i
     sonar::SystemContext::instance().process_image_frame(imageData, imageWidth, imageHeight);
 }
 
-void sonar_get_current_frame_pose(double * out_rotation_ptr, double * out_translation_ptr)
+void sonar_get_current_frame_pose_Rt(double * out_rotation_ptr, double * out_translation_ptr)
 {
-    sonar::SystemContext::instance().get_current_frame_pose(out_rotation_ptr, out_translation_ptr);
+    sonar::SystemContext::instance().get_current_frame_pose_Rt(out_rotation_ptr, out_translation_ptr);
+}
+
+void sonar_get_current_frame_pose_qt(double * out_quaternion_ptr, double * out_translation_ptr)
+{
+    sonar::SystemContext::instance().get_current_frame_pose_qt(out_quaternion_ptr, out_translation_ptr);
 }
 
 int sonar_get_number_init_image_points(int indexStep)

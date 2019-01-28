@@ -53,7 +53,7 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
         m_capturedFramePoints[1] = features;
         m_opticalFlow.setFirstPyramid(imagePyramid.copy());
         _capture(sourceFrame);
-    } return false;
+    } return true;
     case 1: {
         m_opticalFlow.setSecondPyramid(imagePyramid);
         vector<TrackingResult> status;
@@ -92,6 +92,7 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
     if (cast<int>(m_capturedFramePoints[0].size()) < minNumberFeatures())
     {
         reset();
+        return false;
     }
     else
     {
@@ -106,7 +107,7 @@ bool CPU_InitTracker::process(const SourceFrame & sourceFrame)
             m_opticalFlow.setFirstPyramid(imagePyramid.copy());
         }
     }
-    return false;
+    return true;
 }
 
 float CPU_InitTracker::_medianDistance(const vector<Point2f> &pointsA,

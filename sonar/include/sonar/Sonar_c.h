@@ -31,7 +31,9 @@ SONAR_EXPORT void sonar_reset();
 
 SONAR_EXPORT void sonar_process_image_frame(const unsigned char * imageData, int imageWidth, int imageHeight);
 
-SONAR_EXPORT void sonar_get_current_frame_pose(double * out_rotation_ptr, double * out_translation_ptr);
+SONAR_EXPORT void sonar_get_current_frame_pose_Rt(double * out_rotation_ptr, double * out_translation_ptr);
+
+SONAR_EXPORT void sonar_get_current_frame_pose_qt(double * out_quaternion_ptr, double * out_translation_ptr);
 
 SONAR_EXPORT int sonar_get_number_init_image_points(int indexStep);
 

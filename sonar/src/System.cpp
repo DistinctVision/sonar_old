@@ -128,7 +128,7 @@ void System::reset()
 
 shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
 {
-    assert(m_camera);
+    assert(m_camera != nullptr);
 
     switch (m_trackingState) {
 
@@ -136,7 +136,11 @@ shared_ptr<const MapFrame> System::process(const SourceFrame & sourceFrame)
         break;
 
     case TrackingState::Initializing: {
-        m_initTracker->process(sourceFrame);
+        if (!m_initTracker->process(sourceFrame))
+        {
+            reset();
+            break;
+        }
         if (m_initTracker->isFinished())
         {
             bool successFlag;
