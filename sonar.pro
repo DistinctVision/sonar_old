@@ -2,8 +2,6 @@ TEMPLATE = subdirs
 
 CONFIG += ordered
 
-DEFINES += BLABLA
-
 SUBDIRS += \
     sonar \
     debug_gui
