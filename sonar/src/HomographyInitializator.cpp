@@ -106,8 +106,8 @@ HomographyInitializator::compute(const shared_ptr<const AbstractCamera> & firstC
                     planeAxisZ = - planeAxisZ;
                 }
 
-                Vector3d planeAxisX = planeAxisZ.cross(delta).normalized();
-                Vector3d planeAxisY = planeAxisX.cross(planeAxisZ);
+                Vector3d planeAxisX = delta.cross(planeAxisZ).normalized();
+                Vector3d planeAxisY = planeAxisZ.cross(planeAxisX);
 
                 planeRotation.col(0) = planeAxisX;
                 planeRotation.col(1) = planeAxisY;

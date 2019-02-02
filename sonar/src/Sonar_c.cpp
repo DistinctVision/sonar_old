@@ -23,7 +23,87 @@
 #include "sonar/AbstractInitializator.h"
 #include "sonar/System.h"
 
+#include <sonar/DebugTools/debug_tools.h>
+#include <sonar/General/cast.h>
+#include <opencv2/opencv.hpp>
+#include "sonar/General/ImageUtils.h"
+
 namespace sonar {
+
+void draw_cube(cv::Mat cvFrame, const std::shared_ptr<const MapFrame> & mapFrame, double scale = 0.5)
+{
+    using namespace std;
+    using namespace Eigen;
+
+    static const Vector3d vertices[8] = {
+        Vector3d(-0.5, -0.5, 0.0),
+        Vector3d(0.5, -0.5, 0.0),
+        Vector3d(0.5, 0.5, 0.0),
+        Vector3d(-0.5, 0.5, 0.0),
+        Vector3d(-0.5, -0.5, 1.0),
+        Vector3d(0.5, -0.5, 1.0),
+        Vector3d(0.5, 0.5, 1.0),
+        Vector3d(-0.5, 0.5, 1.0),
+    };
+    static const pair<int, int> edges[] = {
+        make_pair(0, 1),
+        make_pair(1, 2),
+        make_pair(2, 3),
+        make_pair(3, 0),
+        make_pair(4, 5),
+        make_pair(5, 6),
+        make_pair(6, 7),
+        make_pair(7, 4),
+        make_pair(0, 4),
+        make_pair(1, 5),
+        make_pair(2, 6),
+        make_pair(3, 7),
+    };
+
+    shared_ptr<const AbstractCamera> camera = mapFrame->camera();
+    Matrix3d R = mapFrame->rotation();
+    Vector3d t = mapFrame->translation();
+    for (auto it_e = begin(edges); it_e != end(edges); ++it_e)
+    {
+        Vector3d v1 = R * vertices[it_e->first] * scale + t;
+        Vector3d v2 = R * vertices[it_e->second] * scale + t;
+        if ((v1.z() < 0.0) || (v2.z() < 0.0))
+            continue;
+        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(v1));
+        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(v2));
+        cv::line(cvFrame, p1, p2, cv::Scalar(0, 255, 0), 2);
+    }
+}
+
+void draw_grid(cv::Mat cvFrame, const std::shared_ptr<const MapFrame> & mapFrame)
+{
+    using namespace std;
+    using namespace Eigen;
+
+    shared_ptr<const AbstractCamera> camera = mapFrame->camera();
+    Matrix3d R = mapFrame->rotation();
+    Vector3d t = mapFrame->translation();
+    for (int i = 0; i <= 10; ++i)
+    {
+        Vector3d v1((i - 5) * 0.1, -0.5, 0.0);
+        Vector3d v2((i - 5) * 0.1, 0.5, 0.0);
+
+        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(R * v1 + t));
+        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(R * v2 + t));
+
+        cv::line(cvFrame, p1, p2, cv::Scalar(255, 0, 0), 2);
+    }
+    for (int i = 0; i <= 10; ++i)
+    {
+        Vector3d v1(-0.5, (i - 5) * 0.1, 0.0);
+        Vector3d v2(0.5, (i - 5) * 0.1,  0.0);
+
+        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(R * v1 + t));
+        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(R * v2 + t));
+
+        cv::line(cvFrame, p1, p2, cv::Scalar(255, 0, 0), 2);
+    }
+}
 
 class SystemContext
 {
@@ -61,12 +141,22 @@ public:
 
     void reset()
     {
+        m_currentMapFrame.reset();
         m_system->reset();
     }
 
     void process_image_frame(const uchar * imageData, int imageWidth, int imageHeight)
     {
         m_currentMapFrame = m_system->process(SourceFrame(ConstImage<uchar>(Point2i(imageWidth, imageHeight), imageData, false)));
+        if (m_currentMapFrame)
+        {
+            Image<Rgb_u> image = m_currentMapFrame->image().convert<Rgb_u>([](const Point2i &p, const uchar &v) { return Rgb_u(v, v, v); });
+            cv::Mat cvImage = image_utils::convertToCvMat(image);
+            draw_grid(cvImage, m_currentMapFrame);
+            draw_cube(cvImage, m_currentMapFrame);
+            cv::imshow("image", cvImage);
+            debug::waitKey(33);
+        }
     }
 
     void get_current_frame_pose_Rt(double * out_rotation_ptr, double * out_translation_ptr)
@@ -103,7 +193,7 @@ public:
         Eigen::Vector3d t;
         if (m_currentMapFrame)
         {
-            q = Eigen::Quaterniond(m_currentMapFrame->rotation());
+            q = Eigen::Quaterniond(m_currentMapFrame->rotation()).normalized();
             t = m_currentMapFrame->translation();
         }
         else
@@ -111,6 +201,7 @@ public:
             q.setIdentity();
             t.setZero();
         }
+
         out_quaternion_ptr[0] = q.x();
         out_quaternion_ptr[1] = q.y();
         out_quaternion_ptr[2] = q.z();

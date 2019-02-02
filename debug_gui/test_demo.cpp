@@ -56,8 +56,15 @@ void draw_cube(cv::Mat cvFrame, const shared_ptr<const MapFrame> & mapFrame, dou
     Vector3d t = mapFrame->translation();
     for (auto it_e = begin(edges); it_e != end(edges); ++it_e)
     {
-        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->first] * scale + t));
-        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(R * vertices[it_e->second] * scale + t));
+        Vector3d v1 = R * vertices[it_e->first] * scale + t;
+        Vector3d v2 = R * vertices[it_e->second] * scale + t;
+        if ((cast<float>(v1.z()) < numeric_limits<float>::epsilon()) ||
+                (cast<float>(v2.z()) < numeric_limits<float>::epsilon()))
+        {
+            continue;
+        }
+        cv::Point2i p1 = cv_cast<int>(camera->toImagePoint(v1));
+        cv::Point2i p2 = cv_cast<int>(camera->toImagePoint(v2));
         cv::line(cvFrame, p1, p2, cv::Scalar(0, 255, 0), 2);
     }
 }
@@ -153,7 +160,7 @@ bool test_demo()
 {
     cv::VideoCapture capture;
 
-    if (!capture.open(0))
+    if (!capture.open(1))
     {
         cerr << "camera not found" << endl;
         return false;
