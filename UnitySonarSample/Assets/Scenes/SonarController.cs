@@ -35,8 +35,9 @@ public class SonarController : MonoBehaviour
         targetCameraImage.texture = webCamTexture;
         targetObject.SetActive(false);
 
+        float focalLength = 1.0f;
         sonar_setPinholeCamera(webCamTexture.width, webCamTexture.height,
-                              (double)webCamTexture.width, (double)webCamTexture.width,
+                              (double)(webCamTexture.width * focalLength), (double)(webCamTexture.width * focalLength),
                                webCamTexture.width * 0.5, webCamTexture.height * 0.5);
     }
 
@@ -104,6 +105,7 @@ public class SonarController : MonoBehaviour
     }
 
     public Material lineMat = null;
+
     void OnPostRender()
     {
         if (TrackingState == TrackingStateType.Initializing)
@@ -157,11 +159,11 @@ public class SonarController : MonoBehaviour
                 }
             }
         }
-        Quaternion q = new Quaternion((float)q_data[0], (float)q_data[1], (float)q_data[2], (float)q_data[3]);
-        Vector3 t = new Vector3((float)t_data[0], (float)t_data[1], (float)t_data[2]);
+        Quaternion q = new Quaternion((float)q_data[0], -(float)q_data[1], (float)q_data[2], (float)q_data[3]);
+        Vector3 t = new Vector3((float)t_data[0], -(float)t_data[1], (float)t_data[2]);
 
-        transform.rotation = Quaternion.Inverse(q);
-        transform.position = - (transform.rotation * t);
+        transform.localRotation = Quaternion.Inverse(q);
+        transform.localPosition = - (transform.localRotation * t);
     }
 
     [DllImport("sonar")]

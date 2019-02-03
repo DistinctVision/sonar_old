@@ -182,7 +182,7 @@ bool test_demo()
     Image<uchar> frame_bw = image_utils::convertToGrayscale(frame_rgb);
 
     double pixelFocalLength = frame_bw.width() * 1.0;
-    auto camera = make_shared<PinholeCamera>(Point2d(pixelFocalLength, pixelFocalLength),
+    auto camera = make_shared<PinholeCamera>(Point2d(pixelFocalLength, - pixelFocalLength),
                                              cast<double>(frame_bw.size()) * 0.5,
                                              frame_bw.size());
     System system;

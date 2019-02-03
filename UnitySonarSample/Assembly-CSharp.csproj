@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scenes\SonarController.cs" />
+    <None Include="Assets\Scenes\OnlyShadowsShader.shader" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>E:/Projects/sonar/UnitySonarSample/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>

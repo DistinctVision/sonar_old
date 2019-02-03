@@ -10,6 +10,8 @@
 #include <memory>
 #include <cstring>
 
+#include <fstream>
+
 #include <Eigen/Eigen>
 
 #include "sonar/General/cast.h"
@@ -23,14 +25,13 @@
 #include "sonar/AbstractInitializator.h"
 #include "sonar/System.h"
 
-#include <sonar/DebugTools/debug_tools.h>
-#include <sonar/General/cast.h>
+/*#include <sonar/DebugTools/debug_tools.h>
 #include <opencv2/opencv.hpp>
-#include "sonar/General/ImageUtils.h"
+#include "sonar/General/ImageUtils.h"*/
 
 namespace sonar {
 
-void draw_cube(cv::Mat cvFrame, const std::shared_ptr<const MapFrame> & mapFrame, double scale = 0.5)
+/*void draw_cube(cv::Mat cvFrame, const std::shared_ptr<const MapFrame> & mapFrame, double scale = 0.5)
 {
     using namespace std;
     using namespace Eigen;
@@ -103,7 +104,7 @@ void draw_grid(cv::Mat cvFrame, const std::shared_ptr<const MapFrame> & mapFrame
 
         cv::line(cvFrame, p1, p2, cv::Scalar(255, 0, 0), 2);
     }
-}
+}*/
 
 class SystemContext
 {
@@ -148,7 +149,7 @@ public:
     void process_image_frame(const uchar * imageData, int imageWidth, int imageHeight)
     {
         m_currentMapFrame = m_system->process(SourceFrame(ConstImage<uchar>(Point2i(imageWidth, imageHeight), imageData, false)));
-        if (m_currentMapFrame)
+        /*if (m_currentMapFrame)
         {
             Image<Rgb_u> image = m_currentMapFrame->image().convert<Rgb_u>([](const Point2i &p, const uchar &v) { return Rgb_u(v, v, v); });
             cv::Mat cvImage = image_utils::convertToCvMat(image);
@@ -156,7 +157,7 @@ public:
             draw_cube(cvImage, m_currentMapFrame);
             cv::imshow("image", cvImage);
             debug::waitKey(33);
-        }
+        }*/
     }
 
     void get_current_frame_pose_Rt(double * out_rotation_ptr, double * out_translation_ptr)

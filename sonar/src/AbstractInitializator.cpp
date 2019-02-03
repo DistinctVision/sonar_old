@@ -10,7 +10,7 @@ namespace sonar {
 
 AbstractInitializator::AbstractInitializator():
     m_minNumberPoints(8),
-    m_maxPixelError(4.0f),
+    m_maxPixelError(5.0f),
     m_distanceToPlane(3.0)
 {
 }
