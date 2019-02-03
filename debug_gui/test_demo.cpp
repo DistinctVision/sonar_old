@@ -160,7 +160,7 @@ bool test_demo()
 {
     cv::VideoCapture capture;
 
-    if (!capture.open(1))
+    if (!capture.open(0))
     {
         cerr << "camera not found" << endl;
         return false;
