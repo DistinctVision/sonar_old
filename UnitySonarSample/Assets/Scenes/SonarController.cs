@@ -30,7 +30,7 @@ public class SonarController : MonoBehaviour
     void Start()
     {
         sonar_reset();
-        webCamTexture = new WebCamTexture(WebCamTexture.devices[1].name, 640, 480);
+        webCamTexture = new WebCamTexture(WebCamTexture.devices[0].name, 640, 480);
         webCamTexture.Play();
         targetCameraImage.texture = webCamTexture;
         targetObject.SetActive(false);
