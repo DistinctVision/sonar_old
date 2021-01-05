@@ -55,8 +55,9 @@ int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
 
-    runDemo();
+    //runDemo();
     //runTests();
+    test_new_decomposition();
 
     //return app.exec();
     return 0;
