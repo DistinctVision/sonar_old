@@ -239,7 +239,18 @@ bool test_new_decomposition()
     Vector3d real_t = generateRandomVector3d(3.0);
     Vector3d real_n = generateRandomVector3d(1.0);
 
-    Matrix3d H = real_R + real_t * real_n.transpose();
+    Matrix3d H0 = real_R + real_t * real_n.transpose();
+    Matrix3d rawH = H0 * (1.0 / 3.5);
+
+    auto normalizedHomography = [] (const Matrix3d & H)
+    {
+        JacobiSVD<Matrix3d> svd(H, ComputeEigenvectors);
+        double scale = 1.0 / svd.singularValues()[1];
+        return H * scale;
+    };
+    Matrix3d H = normalizedHomography(rawH);
+    Matrix3d Hinv = H.inverse();
+
     Matrix3d W = H * H.transpose() - Matrix3d::Identity();
     Matrix3d H_inv = H.inverse();
     Matrix3d S = H_inv.transpose() * H_inv;
@@ -254,97 +265,100 @@ bool test_new_decomposition()
     vector<Matrix3d, aligned_allocator<Matrix3d>> Rs;
     for (size_t i = 0; i < 2; ++i)
     {
-        //const double & z1 = roots_z1[i];
-        double z1 = real_t.y() / real_t.x();
+        const double & z1 = roots_z1[i];
         double z1_2 = z1 * z1;
         double z1_3 = z1_2 * z1;
         double z1_4 = z1_3 * z1;
         for (size_t j = 0; j < 2; ++j)
         {
-            //const double & z2 = roots_z2[j];
-            double z2 = real_t.z() / real_t.x();
+            const double & z2 = roots_z2[j];
             double z2_2 = z2 * z2;
             double z2_3 = z2_2 * z2;
             double z2_4 = z2_3 * z2;
-            for (size_t k = 0; k < 2; ++k)
+            Vector3d n_ = H * real_n;
+            Matrix3d W_ = n_ * real_t.transpose() + real_t * n_.transpose() - real_t * real_t.transpose();
+            double s1 = n_.transpose() * S * n_;
+            double n_x = (W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x());
+            double n_y = (W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1);
+            double n_z = (W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2);
+            double s2 = n_x * n_x * S(0, 0) + n_x * n_y * S(0, 1) * 2.0 + n_x * n_z * S(0, 2) * 2.0 +
+                    n_y * n_y * S(1, 1) + n_y * n_z * S(1, 2) * 2.0 + n_z * n_z * S(2, 2);
+
+            double s = S(0, 0) * pow((W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x()), 2.0) +
+                    2.0 * S(0, 1) * ((W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x())) *
+                    ((W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1)) +
+                    2.0 * S(0, 2) * ((W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x())) *
+                    ((W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2)) +
+                    S(1, 1) * pow((W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1), 2.0) +
+                    2.0 * S(1, 2) * ((W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1)) *
+                    ((W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2)) +
+                    S(2, 2) * pow((W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2), 2.0);
+            double sA = 4.0 * z1_2 * z2_2 * pow(real_t.x(), 2.0);
+            double sB = S(0, 0) * z1_2 * z2_2 * W(0, 0) * W(0, 0) +
+                    S(0, 0) * z1_2 * z2_2 * 2.0 * W(0, 0) * pow(real_t.x(), 2.0) +
+                    S(0, 0) * z1_2 * z2_2 * pow(real_t.x(), 4.0) +
+                    2.0 * S(0, 1) * z1 * z2_2 * W(0, 0) * W(1, 1) +
+                    2.0 * S(0, 1) * z1_3 * z2_2 * W(0, 0) * pow(real_t.x(), 2.0) +
+                    2.0 * S(0, 1) * z1 * z2_2 * W(1, 1) * pow(real_t.x(), 2.0) +
+                    2.0 * S(0, 1) * z1_3 * z2_2 * pow(real_t.x(), 4.0) +
+                    2.0 * S(0, 2) * z1_2 * z2 * W(0, 0) * W(2, 2) +
+                    2.0 * S(0, 2) * z1_2 * z2_3 * W(0, 0) * pow(real_t.x(), 2.0) +
+                    2.0 * S(0, 2) * z1_2 * z2 * W(2, 2) * pow(real_t.x(), 2.0) +
+                    2.0 * S(0, 2) * z1_2 * z2_3 * pow(real_t.x(), 4.0) +
+                    S(1, 1) * z2_2 * W(1, 1) * W(1, 1) +
+                    2.0 * S(1, 1) * z2_2 * W(1, 1) * z1_2 * pow(real_t.x(), 2.0) +
+                    S(1, 1) * z1_4 * z2_2 * pow(real_t.x(), 4.0) +
+                    2.0 * S(1, 2) * z1 * z2 * W(1, 1) * W(2, 2) +
+                    2.0 * S(1, 2) * z1 * z2_3 * W(1, 1) * pow(real_t.x(), 2.0) +
+                    2.0 * S(1, 2) * z1_3 * z2 * W(2, 2) * pow(real_t.x(), 2.0) +
+                    2.0 * S(1, 2) * z1_3 * z2_3 * pow(real_t.x(), 4.0) +
+                    S(2, 2) * z1_2 * W(2, 2) * W(2, 2) +
+                    2.0 * S(2, 2) * z1_2 * z2_2 * W(2, 2) * pow(real_t.x(), 2.0) +
+                    S(2, 2) * z1_2 * z2_4 * pow(real_t.x(), 4.0);
+
+            double a = S(0, 0) * z1_2 * z2_2 +
+                    2.0 * S(0, 1) * z1_3 * z2_2 +
+                    2.0 * S(0, 2) * z1_2 * z2_3 +
+                    S(1, 1) * z1_4 * z2_2 +
+                    2.0 * S(1, 2) * z1_3 * z2_3 +
+                    S(2, 2) * z1_2 * z2_4;
+            double b = - 4.0 * z1_2 * z2_2 +
+                    2.0 * S(0, 0) * z1_2 * z2_2 * W(0, 0) +
+                    2.0 * S(0, 1) * z1_3 * z2_2 * W(0, 0) +
+                    2.0 * S(0, 1) * z1 * z2_2 * W(1, 1) +
+                    2.0 * S(0, 2) * z1_2 * z2_3 * W(0, 0) +
+                    2.0 * S(0, 2) * z1_2 * z2 * W(2, 2) +
+                    2.0 * S(1, 1) * z2_2 * z1_2 * W(1, 1) +
+                    2.0 * S(1, 2) * z1 * z2_3 * W(1, 1) +
+                    2.0 * S(1, 2) * z1_3 * z2 * W(2, 2) +
+                    2.0 * S(2, 2) * z1_2 * z2_2 * W(2, 2);
+            double c = S(0, 0) * z1_2 * z2_2 * W(0, 0) * W(0, 0) +
+                    2.0 * S(0, 1) * z1 * z2_2 * W(0, 0) * W(1, 1) +
+                    2.0 * S(0, 2) * z1_2 * z2 * W(0, 0) * W(2, 2) +
+                    S(1, 1) * z2_2 * W(1, 1) * W(1, 1) +
+                    2.0 * S(1, 2) * z1 * z2 * W(1, 1) * W(2, 2) +
+                    S(2, 2) * z1_2 * W(2, 2) * W(2, 2);
+            //double e = a * pow(real_t.x(), 4.0) + b * pow(real_t.x(), 2.0) + c;
+            //qDebug() << e;
+            double roots_sqr_t_x[2];
+            tie(roots_sqr_t_x[0], roots_sqr_t_x[1]) = solveSqrEquation(a, b, c);
+            for (size_t ii = 0; ii < 2; ++ii)
             {
-                Vector3d n_ = H * real_n;
-                Matrix3d W_ = n_ * real_t.transpose() + real_t * n_.transpose() - real_t * real_t.transpose();
-                double s1 = n_.transpose() * S * n_;
-                double n_x = (W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x());
-                double n_y = (W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1);
-                double n_z = (W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2);
-                double s2 = n_x * n_x * S(0, 0) + n_x * n_y * S(0, 1) * 2.0 + n_x * n_z * S(0, 2) * 2.0 +
-                            n_y * n_y * S(1, 1) + n_y * n_z * S(1, 2) * 2.0 + n_z * n_z * S(2, 2);
-
-                double s = S(0, 0) * pow((W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x()), 2.0) +
-                        2.0 * S(0, 1) * ((W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x())) *
-                                        ((W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1)) +
-                        2.0 * S(0, 2) * ((W(0, 0) + pow(real_t.x(), 2.0)) / (2.0 * real_t.x())) *
-                                        ((W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2)) +
-                        S(1, 1) * pow((W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1), 2.0) +
-                        2.0 * S(1, 2) * ((W(1, 1) + pow(real_t.x(), 2.0) * z1_2) / (2.0 * real_t.x() * z1)) *
-                                        ((W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2)) +
-                        S(2, 2) * pow((W(2, 2) + pow(real_t.x(), 2.0) * z2_2) / (2.0 * real_t.x() * z2), 2.0);
-                double sA = 4.0 * z1_2 * z2_2 * pow(real_t.x(), 2.0);
-                double sB = S(0, 0) * z1_2 * z2_2 * W(0, 0) * W(0, 0) +
-                                S(0, 0) * z1_2 * z2_2 * 2.0 * W(0, 0) * pow(real_t.x(), 2.0) +
-                                S(0, 0) * z1_2 * z2_2 * pow(real_t.x(), 4.0) +
-                        2.0 * S(0, 1) * z1 * z2_2 * W(0, 0) * W(1, 1) +
-                                2.0 * S(0, 1) * z1_3 * z2_2 * W(0, 0) * pow(real_t.x(), 2.0) +
-                                2.0 * S(0, 1) * z1 * z2_2 * W(1, 1) * pow(real_t.x(), 2.0) +
-                                2.0 * S(0, 1) * z1_3 * z2_2 * pow(real_t.x(), 4.0) +
-                        2.0 * S(0, 2) * z1_2 * z2 * W(0, 0) * W(2, 2) +
-                                2.0 * S(0, 2) * z1_2 * z2_3 * W(0, 0) * pow(real_t.x(), 2.0) +
-                                2.0 * S(0, 2) * z1_2 * z2 * W(2, 2) * pow(real_t.x(), 2.0) +
-                                2.0 * S(0, 2) * z1_2 * z2_3 * pow(real_t.x(), 4.0) +
-                        S(1, 1) * z2_2 * W(1, 1) * W(1, 1) +
-                                2.0 * S(1, 1) * z2_2 * W(1, 1) * z1_2 * pow(real_t.x(), 2.0) +
-                                S(1, 1) * z1_4 * z2_2 * pow(real_t.x(), 4.0) +
-                        2.0 * S(1, 2) * z1 * z2 * W(1, 1) * W(2, 2) +
-                                2.0 * S(1, 2) * z1 * z2_3 * W(1, 1) * pow(real_t.x(), 2.0) +
-                                2.0 * S(1, 2) * z1_3 * z2 * W(2, 2) * pow(real_t.x(), 2.0) +
-                                2.0 * S(1, 2) * z1_3 * z2_3 * pow(real_t.x(), 4.0) +
-                        S(2, 2) * z1_2 * W(2, 2) * W(2, 2) +
-                            2.0 * S(2, 2) * z1_2 * z2_2 * W(2, 2) * pow(real_t.x(), 2.0) +
-                            S(2, 2) * z1_2 * z2_4 * pow(real_t.x(), 4.0);
-
-                double a = S(0, 0) * z1_2 * z2_2 +
-                        2.0 * S(0, 1) * z1_3 * z2_2 +
-                        2.0 * S(0, 2) * z1_2 * z2_3 +
-                        S(1, 1) * z1_4 * z2_2 +
-                        2.0 * S(1, 2) * z1_3 * z2_3 +
-                        S(2, 2) * z1_2 * z2_4;
-                double b = - 4.0 * z1_2 * z2_2 +
-                        2.0 * S(0, 0) * z1_2 * z2_2 * W(0, 0) +
-                        2.0 * S(0, 1) * z1_3 * z2_2 * W(0, 0) +
-                        2.0 * S(0, 1) * z1 * z2_2 * W(1, 1) +
-                        2.0 * S(0, 2) * z1_2 * z2_3 * W(0, 0) +
-                        2.0 * S(0, 2) * z1_2 * z2 * W(2, 2) +
-                        2.0 * S(1, 1) * z2_2 * z1_2 * W(1, 1) +
-                        2.0 * S(1, 2) * z1 * z2_3 * W(1, 1) +
-                        2.0 * S(1, 2) * z1_3 * z2 * W(2, 2) +
-                        2.0 * S(2, 2) * z1_2 * z2_2 * W(2, 2);
-                double c = S(0, 0) * z1_2 * z2_2 * W(0, 0) * W(0, 0) +
-                        2.0 * S(0, 1) * z1 * z2_2 * W(0, 0) * W(1, 1) +
-                        2.0 * S(0, 2) * z1_2 * z2 * W(0, 0) * W(2, 2) +
-                        S(1, 1) * z2_2 * W(1, 1) * W(1, 1) +
-                        2.0 * S(1, 2) * z1 * z2 * W(1, 1) * W(2, 2) +
-                        S(2, 2) * z1_2 * W(2, 2) * W(2, 2);
-                //double e = a * pow(real_t.x(), 4.0) + b * pow(real_t.x(), 2.0) + c;
-                //qDebug() << e;
-                double roots_sqr_t_x[2];
-                tie(roots_sqr_t_x[0], roots_sqr_t_x[1]) = solveSqrEquation(a, b, c);
-                for (size_t ii = 0; ii < 2; ++ii)
+                double root_t_x = sqrt(roots_sqr_t_x[ii]);
+                for (size_t jj = 0; jj < 2; ++jj)
                 {
-                    double root_t_x = sqrt(roots_sqr_t_x[ii]);
-                    for (size_t jj = 0; jj < 2; ++jj)
-                    {
-                        double t_x = root_t_x * signs[jj];
-                        Vector3d t(t_x, t_x * z1, t_x * z2);
+                    double t_x = root_t_x * signs[jj];
+                    Vector3d t(t_x, t_x * z1, t_x * z2);
+                    Vector3d n = Hinv * Vector3d((W(0, 0) + t.x() * t.x()) / (2.0 * t.x()),
+                                                 (W(1, 1) + t.y() * t.y()) / (2.0 * t.y()),
+                                                 (W(2, 2) + t.z() * t.z()) / (2.0 * t.z()));
+                    Matrix3d R = H - t * n.transpose();
+                    double length_n = n.norm();
+                    double dR = R.determinant();
 
-                        ts.push_back(t);
-                    }
+                    qDebug() << length_n << dR;
+
+                    ts.push_back(t);
                 }
             }
         }

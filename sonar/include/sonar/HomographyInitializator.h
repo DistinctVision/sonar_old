@@ -15,6 +15,12 @@ class HomographyInitializator:
         public AbstractInitializator
 {
 public:
+    enum class DecompositionMethod
+    {
+        FaugerasMethod,
+        MyMethod
+    };
+
     HomographyInitializator();
 
     int numberRansacIterations() const;
@@ -39,6 +45,8 @@ private:
 
     int m_numberRansacIterations;
 
+    DecompositionMethod m_decompositionMethod;
+
     std::tuple<transformation_t, transformation_t,
                std::vector<int>, points_t,
                Eigen::Vector3d, Eigen::Vector3d>
@@ -50,6 +58,12 @@ private:
     Eigen::Matrix3d _computeHomography(const bearingVectors_t & dirs_a,
                                        const bearingVectors_t & dirs_b,
                                        const std::vector<int> & samples) const;
+
+    std::vector<_Decomposition> _faugerasDecompose(const Eigen::Matrix3d & H) const;
+
+    int _solveSqrEquation(double * outRoots, double a, double b, double c) const;
+    std::vector<double> _getHomographyScales(const Eigen::Matrix3d & H) const;
+    std::vector<_Decomposition> _myDecompose(const Eigen::Matrix3d & H) const;
 
     std::vector<_Decomposition> _decompose(const Eigen::Matrix3d & H) const;
 

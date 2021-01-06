@@ -27,10 +27,9 @@ using namespace sonar::math_utils;
 namespace sonar {
 
 HomographyInitializator::HomographyInitializator():
-    m_numberRansacIterations(400)
-{
-
-}
+    m_numberRansacIterations(400),
+    m_decompositionMethod(DecompositionMethod::MyMethod)
+{}
 
 int HomographyInitializator::numberRansacIterations() const
 {
@@ -92,7 +91,6 @@ HomographyInitializator::compute(const shared_ptr<const AbstractCamera> & firstC
         if (alignByPlaneFlag) // move all coordinates in plane space
         {
             double scale = distanceToPlane() / planePoint.norm();
-            double invScale = 1.0 / scale;
 
             Matrix3d planeRotation;
             {
@@ -116,9 +114,9 @@ HomographyInitializator::compute(const shared_ptr<const AbstractCamera> & firstC
             Matrix3d invPlaneRotation = planeRotation.inverse();
 
             planePoint *= scale;
-            firstTransform.col(3) *= invScale;
-            secondTransform.col(3) *= invScale;
-            thirdTransform.col(3) *= invScale;
+            firstTransform.col(3) *= scale;
+            secondTransform.col(3) *= scale;
+            thirdTransform.col(3) *= scale;
 
             for (point_t & point : points)
                 point = (invPlaneRotation * (point * scale - planePoint)).eval();
@@ -420,7 +418,7 @@ Matrix3d HomographyInitializator::_computeHomography(const bearingVectors_t & di
 }
 
 vector<HomographyInitializator::_Decomposition>
-HomographyInitializator::_decompose(const Matrix3d & H) const
+HomographyInitializator::_faugerasDecompose(const Matrix3d & H) const
 {
     JacobiSVD<Matrix3d> svd(H, ComputeFullU | ComputeFullV | ComputeEigenvectors);
 
@@ -509,6 +507,140 @@ HomographyInitializator::_decompose(const Matrix3d & H) const
 
         decomposition.R = U * decomposition.R * V.transpose() * s;
         decomposition.t = U * pt;
+    }
+    return decompositions;
+}
+
+int HomographyInitializator::_solveSqrEquation(double * outRoots, double a, double b, double c) const
+{
+    const double eps = 1e-5;
+
+    double D = b * b - 4.0 * a * c;
+    if (fabs(D) < eps)
+    {
+        double a2 = 2.0 * a;
+        outRoots[0] = - b / a2;
+        return 1;
+    }
+    else if (D < 0.0)
+    {
+        return 0;
+    }
+    double a2 = 2.0 * a;
+    double sqrtD = sqrt(D);
+    outRoots[0] = (- b - sqrtD) / a2;
+    outRoots[1] = (- b + sqrtD) / a2;
+    return 2;
+}
+
+vector<double> HomographyInitializator::_getHomographyScales(const Matrix3d & H) const
+{
+    const double eps = 1e-5;
+
+    JacobiSVD<Matrix3d> svd(H, ComputeEigenvectors);
+    Vector3d scales = svd.singularValues();
+    for (int i = 0; i < 3; ++i)
+    {
+        if (fabs(scales[i]) < eps)
+            return {};
+    }
+    scales = scales.cwiseInverse();
+    return { - scales[0], scales[0], - scales[1], scales[1], - scales[2], scales[2] };
+}
+
+vector<HomographyInitializator::_Decomposition> HomographyInitializator::_myDecompose(const Matrix3d & H) const
+{
+    vector<_Decomposition> decompositions;
+
+    vector<double> homographyScales = _getHomographyScales(H);
+
+    const double signs[2] = { -1.0, 1.0 };
+    double roots_z1[2], roots_z2[2];
+    double roots_sqr_t_x[2];
+    for (const double & homographyScale : homographyScales)
+    {
+        Matrix3d sH = H * homographyScale;
+
+        Matrix3d W = sH * sH.transpose() - Matrix3d::Identity();
+        Matrix3d sH_inv = sH.inverse();
+        Matrix3d S = sH_inv.transpose() * sH_inv;
+
+        int numberOfRoots_z1 = _solveSqrEquation(roots_z1, W(0, 0), - 2.0 * W(0, 1), W(1, 1));
+
+        for (int i = 0; i < numberOfRoots_z1; ++i)
+        {
+            const double & z1 = roots_z1[i];
+            double z1_2 = z1 * z1;
+            double z1_3 = z1_2 * z1;
+            double z1_4 = z1_3 * z1;
+
+            int numberOfRoots_z2 = _solveSqrEquation(roots_z2, W(0, 0), - 2.0 * W(0, 2), W(2, 2));
+            for (int j = 0; j < numberOfRoots_z2; ++j)
+            {
+                const double & z2 = roots_z2[j];
+                double z2_2 = z2 * z2;
+                double z2_3 = z2_2 * z2;
+                double z2_4 = z2_3 * z2;
+
+                double a = S(0, 0) * z1_2 * z2_2 +
+                        2.0 * S(0, 1) * z1_3 * z2_2 +
+                        2.0 * S(0, 2) * z1_2 * z2_3 +
+                        S(1, 1) * z1_4 * z2_2 +
+                        2.0 * S(1, 2) * z1_3 * z2_3 +
+                        S(2, 2) * z1_2 * z2_4;
+                double b = - 4.0 * z1_2 * z2_2 +
+                        2.0 * S(0, 0) * z1_2 * z2_2 * W(0, 0) +
+                        2.0 * S(0, 1) * z1_3 * z2_2 * W(0, 0) +
+                        2.0 * S(0, 1) * z1 * z2_2 * W(1, 1) +
+                        2.0 * S(0, 2) * z1_2 * z2_3 * W(0, 0) +
+                        2.0 * S(0, 2) * z1_2 * z2 * W(2, 2) +
+                        2.0 * S(1, 1) * z2_2 * z1_2 * W(1, 1) +
+                        2.0 * S(1, 2) * z1 * z2_3 * W(1, 1) +
+                        2.0 * S(1, 2) * z1_3 * z2 * W(2, 2) +
+                        2.0 * S(2, 2) * z1_2 * z2_2 * W(2, 2);
+                double c = S(0, 0) * z1_2 * z2_2 * W(0, 0) * W(0, 0) +
+                        2.0 * S(0, 1) * z1 * z2_2 * W(0, 0) * W(1, 1) +
+                        2.0 * S(0, 2) * z1_2 * z2 * W(0, 0) * W(2, 2) +
+                        S(1, 1) * z2_2 * W(1, 1) * W(1, 1) +
+                        2.0 * S(1, 2) * z1 * z2 * W(1, 1) * W(2, 2) +
+                        S(2, 2) * z1_2 * W(2, 2) * W(2, 2);
+                int numberOfRoots_sqr_x = _solveSqrEquation(roots_sqr_t_x, a, b, c);
+                for (int ii = 0; ii < numberOfRoots_sqr_x; ++ii)
+                {
+                    double root_t_x = sqrt(roots_sqr_t_x[ii]);
+                    for (size_t jj = 0; jj < 2; ++jj)
+                    {
+                        double t_x = root_t_x * signs[jj];
+                        Vector3d t(t_x, t_x * z1, t_x * z2);
+                        Vector3d n = sH_inv * Vector3d((W(0, 0) + t.x() * t.x()) / (2.0 * t.x()),
+                                                       (W(1, 1) + t.y() * t.y()) / (2.0 * t.y()),
+                                                       (W(2, 2) + t.z() * t.z()) / (2.0 * t.z()));
+                        Matrix3d R = sH - t * n.transpose();
+                        double dR = R.determinant();
+
+                        if (dR < 0.0)
+                            continue;
+
+                        decompositions.push_back({ R, t, n, 1.0 });
+                    }
+                }
+            }
+        }
+    }
+
+    return decompositions;
+}
+
+vector<HomographyInitializator::_Decomposition> HomographyInitializator::_decompose(const Matrix3d & H) const
+{
+    vector<_Decomposition> decompositions;
+    switch (m_decompositionMethod) {
+    case DecompositionMethod::FaugerasMethod:
+        decompositions = _faugerasDecompose(H);
+        break;
+    case DecompositionMethod::MyMethod:
+        decompositions = _myDecompose(H);
+        break;
     }
     return decompositions;
 }

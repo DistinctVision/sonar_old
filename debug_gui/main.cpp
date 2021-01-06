@@ -42,7 +42,7 @@ void runTests()
 
     cout << "test result: " << nSuccess << " / " << nTests << " time = " << delta_time << "ms" << endl;
 
-    assert(nSuccess >= static_cast<int>(nTests * 0.95));
+    assert(nSuccess >= static_cast<int>(nTests * 0.9));
 }
 
 void runDemo()
@@ -56,8 +56,8 @@ int main(int argc, char ** argv)
     QGuiApplication app(argc, argv);
 
     //runDemo();
-    //runTests();
-    test_new_decomposition();
+    runTests();
+    //test_new_decomposition();
 
     //return app.exec();
     return 0;
